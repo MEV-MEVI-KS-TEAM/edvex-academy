@@ -434,6 +434,10 @@ export default function LandingPage() {
               <span className="es">+ $50 inscripción · Total: <strong>$950 USD</strong></span>
               <span className="en">+ $50 enrollment · Total: <strong>$950 USD</strong></span>
             </div>
+            <div className="plan-titulacion">
+              <span className="es">Titulación al finalizar: $450 USD</span>
+              <span className="en">Certification upon completion: $450 USD</span>
+            </div>
             <ul className="plan-features">
               {[
                 { es: '6 meses de acceso completo', en: '6 months full access' },
@@ -477,6 +481,10 @@ export default function LandingPage() {
             <div className="plan-total">
               <span className="es">+ $50 inscripción · Total: <strong>$950 USD</strong></span>
               <span className="en">+ $50 enrollment · Total: <strong>$950 USD</strong></span>
+            </div>
+            <div className="plan-titulacion">
+              <span className="es">Titulación al finalizar: $450 USD</span>
+              <span className="en">Certification upon completion: $450 USD</span>
             </div>
             <ul className="plan-features">
               {[

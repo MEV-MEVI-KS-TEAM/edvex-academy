@@ -744,9 +744,12 @@
 }
 .edvex-landing .plan-price .period { font-size: .85rem; color: var(--gris); }
 .edvex-landing .plan-total {
-  font-size: .8rem; color: var(--gris); margin-bottom: 24px;
+  font-size: .8rem; color: var(--gris); margin-bottom: 6px;
 }
 .edvex-landing .plan-total strong { color: var(--blanco); }
+.edvex-landing .plan-titulacion {
+  font-size: .72rem; color: var(--gris); opacity: .75; margin-bottom: 24px;
+}
 .edvex-landing .plan-features {
   list-style: none;
   display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px;
