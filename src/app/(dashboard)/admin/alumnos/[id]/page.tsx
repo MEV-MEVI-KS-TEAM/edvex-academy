@@ -271,6 +271,12 @@ export default function AlumnoDetallePage() {
   async function handleGuardarDoc(docId: string) {
     const edit = docEdits[docId]
     if (!edit) return
+    // Validación en cliente equivalente a la del PATCH: avisar antes de gastar
+    // un viaje al servidor, y con un mensaje que señala el campo concreto.
+    if (edit.estado === 'rechazado' && !edit.comentario?.trim()) {
+      showToast('Indica el motivo del rechazo para que el alumno sepa qué corregir', 'error')
+      return
+    }
     setSavingDoc(docId)
     try {
       const res = await fetch(`/api/admin/documentos/${id}`, {
@@ -631,7 +637,12 @@ export default function AlumnoDetallePage() {
                     {/* Comentario */}
                     <input
                       type="text"
-                      placeholder="Comentario (opcional)"
+                      // El PATCH exige motivo al rechazar. Sin reflejarlo aquí,
+                      // el admin dejaba el campo vacío fiándose de "(opcional)"
+                      // y recibía un 400 sin saber qué faltaba.
+                      placeholder={edit.estado === 'rechazado'
+                        ? 'Motivo del rechazo (obligatorio)'
+                        : 'Comentario (opcional)'}
                       value={edit.comentario}
                       onChange={e => setDocEdits(prev => ({ ...prev, [doc.id]: { ...prev[doc.id], comentario: e.target.value } }))}
                       className="w-full px-3 py-1.5 rounded-lg text-xs outline-none"
