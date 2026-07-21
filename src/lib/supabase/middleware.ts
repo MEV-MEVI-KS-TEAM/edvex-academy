@@ -37,9 +37,26 @@ export async function updateSession(request: NextRequest) {
   if (user && isPublicRoute && !isLandingRoot) {
     const { data: usuario } = await supabase
       .from('usuarios')
-      .select('rol')
+      .select('rol, activo')
       .eq('id', user.id)
       .single()
+
+    // ADMIN desactivado: se le deja en la ruta pública en vez de rebotarle a
+    // /admin.
+    //
+    // NO es cosmético, evita un BUCLE INFINITO: el bloque de rutas admin de
+    // abajo manda al admin inactivo a /login, y este bloque le mandaría de
+    // vuelta a /admin —su rol sigue siendo ADMIN—, turnándose indefinidamente
+    // con 302 y sin un solo error en los logs.
+    //
+    // Acotado a ADMIN a propósito: es el único rol que puede entrar en ese
+    // bucle, porque es el único cuyo destino (/admin) redirige a /login. Un
+    // ALUMNO dado de baja conserva su comportamiento actual —sigue siendo
+    // enviado a /alumno— porque cerrar el acceso de los alumnos inactivos es
+    // otro problema, con otro alcance, y no toca resolverlo aquí de rebote.
+    if (usuario?.activo === false && usuario?.rol?.toUpperCase() === 'ADMIN') {
+      return supabaseResponse
+    }
 
     const roleRedirects: Record<string, string> = {
       ADMIN: '/admin',
@@ -67,9 +84,31 @@ export async function updateSession(request: NextRequest) {
   if (user && isAdminRoute) {
     const { data: usuario } = await supabase
       .from('usuarios')
-      .select('rol')
+      .select('rol, activo')
       .eq('id', user.id)
       .single()
+
+    // La baja en EDVEX es lógica (usuarios.activo = false), así que hasta ahora
+    // una cuenta dada de baja seguía navegando el panel con normalidad. Se
+    // comprueba ANTES del rol: un admin desactivado sigue teniendo rol ADMIN, y
+    // el check de rol lo dejaría pasar.
+    //
+    // Solo el false explícito. La columna es NOT NULL DEFAULT TRUE; si un NULL
+    // apareciera por una migración futura, la lectura segura es "no dado de
+    // baja" — bloquear por un NULL inesperado tumbaría el panel entero.
+    if (usuario?.activo === false) {
+      if (request.nextUrl.pathname.startsWith('/api/admin')) {
+        return NextResponse.json({ error: 'Esta cuenta está desactivada.' }, { status: 403 })
+      }
+      // A /login y NO a /alumno: un admin desactivado no es un alumno, y
+      // mandarlo a /alumno le enseñaría un dashboard de estudiante vacío en vez
+      // de decirle que su cuenta ya no está activa. El bloque de rutas públicas
+      // de arriba lo deja quedarse en /login en vez de rebotarlo.
+      const url = request.nextUrl.clone()
+      url.pathname = '/login'
+      url.searchParams.set('cuenta', 'desactivada')
+      return NextResponse.redirect(url)
+    }
 
     if (usuario?.rol !== 'ADMIN') {
       if (request.nextUrl.pathname.startsWith('/api/admin')) {
