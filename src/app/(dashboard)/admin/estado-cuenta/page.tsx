@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Wallet, Search, CheckCircle2, AlertTriangle } from 'lucide-react'
-import { fmtUSD, fmtFecha } from '@/lib/format'
+import { fmtUSD, fmtFecha, norm } from '@/lib/format'
 
 interface EstadoAlumno {
   id: string
@@ -45,13 +45,7 @@ function situacionDe(a: { plan_nombre: string | null; meses_desbloqueados: numbe
 }
 
 /**
- * Quita acentos para que "jose" encuentre a "José" y "nunez" a "Núñez".
- * El rango se construye con RegExp y no como literal: el target del tsconfig no
- * habilita el flag `u` (necesario para \p{Diacritic}), y escribir los caracteres
- * combinantes crudos en el fuente los deja a merced de la codificación del archivo.
  */
-const DIACRITICOS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g')
-const norm = (s: string) => s.normalize('NFD').replace(DIACRITICOS, '').toLowerCase()
 
 const CARD = { background: '#181C26', border: '1px solid #2A2F3E' }
 const INPUT_STYLE = { background: '#0B0D11', border: '1px solid #2A2F3E', color: '#F1F5F9' }

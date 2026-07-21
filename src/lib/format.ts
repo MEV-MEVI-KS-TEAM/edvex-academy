@@ -72,3 +72,19 @@ export function fmtMes(valor: string | null | undefined): string {
   if (Number.isNaN(d.getTime())) return valor
   return d.toLocaleDateString('es-MX', { month: 'short', year: 'numeric' })
 }
+
+/**
+ * Normaliza texto para búsquedas: quita acentos y pasa a minúsculas, para que
+ * "jose" encuentre a "José" y "nunez" a "Núñez". Imprescindible con un padrón
+ * mexicano.
+ *
+ * El rango de combinantes se construye con RegExp y no como literal: el target
+ * del tsconfig no habilita el flag `u` (necesario para \p{Diacritic}), y
+ * escribir los caracteres crudos en el fuente los deja a merced de la
+ * codificación del archivo.
+ */
+const DIACRITICOS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g')
+
+export function norm(s: string | null | undefined): string {
+  return (s ?? '').normalize('NFD').replace(DIACRITICOS, '').toLowerCase()
+}

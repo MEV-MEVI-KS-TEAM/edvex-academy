@@ -27,6 +27,9 @@ const dict = {
       courses:    'Cursos',
       reports:    'Reportes',
       accountStatus: 'Estado de cuenta',
+      payments:   'Pagos',
+      documents:  'Documentos',
+      systemUsers: 'Usuarios',
       settings:   'Configuración',
       // Alumno
       myProgress: 'Mi Progreso',
@@ -421,6 +424,9 @@ const dict = {
       courses:    'Courses',
       reports:    'Reports',
       accountStatus: 'Account status',
+      payments:   'Payments',
+      documents:  'Documents',
+      systemUsers: 'Users',
       settings:   'Settings',
       // Student
       myProgress: 'My Progress',
