@@ -41,20 +41,22 @@ export async function updateSession(request: NextRequest) {
       .eq('id', user.id)
       .single()
 
-    // Cuenta desactivada: se la deja en la ruta pública en vez de rebotarla a su
-    // dashboard.
+    // ADMIN desactivado: se le deja en la ruta pública en vez de rebotarle a
+    // /admin.
     //
     // NO es cosmético, evita un BUCLE INFINITO: el bloque de rutas admin de
-    // abajo manda al admin inactivo a /login, y este bloque lo mandaría de
+    // abajo manda al admin inactivo a /login, y este bloque le mandaría de
     // vuelta a /admin —su rol sigue siendo ADMIN—, turnándose indefinidamente
     // con 302 y sin un solo error en los logs.
     //
-    // Efecto lateral asumido: un ALUMNO dado de baja tampoco será redirigido
-    // automáticamente desde /login a /alumno. Puede seguir navegando a /alumno a
-    // mano (este cambio no cierra el acceso de alumnos, que es otro asunto),
-    // pero deja de ser empujado dentro de una plataforma de la que se le dio de
-    // baja, que es el comportamiento coherente.
-    if (usuario?.activo === false) return supabaseResponse
+    // Acotado a ADMIN a propósito: es el único rol que puede entrar en ese
+    // bucle, porque es el único cuyo destino (/admin) redirige a /login. Un
+    // ALUMNO dado de baja conserva su comportamiento actual —sigue siendo
+    // enviado a /alumno— porque cerrar el acceso de los alumnos inactivos es
+    // otro problema, con otro alcance, y no toca resolverlo aquí de rebote.
+    if (usuario?.activo === false && usuario?.rol?.toUpperCase() === 'ADMIN') {
+      return supabaseResponse
+    }
 
     const roleRedirects: Record<string, string> = {
       ADMIN: '/admin',
