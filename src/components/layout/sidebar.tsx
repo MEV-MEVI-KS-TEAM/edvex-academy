@@ -17,6 +17,7 @@ import {
   CreditCard,
   FolderOpen,
   GraduationCap,
+  Wallet,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { EdvexLogo } from '@/components/ui/edvex-logo'
@@ -37,6 +38,7 @@ const NAV_ITEMS: Record<UserRole, NavItem[]> = {
     { labelKey: 'sidebar.content',    href: '/admin/contenido',      icon: BookOpen        },
     { labelKey: 'sidebar.courses',    href: '/admin/cursos',         icon: GraduationCap   },
     { labelKey: 'sidebar.reports',    href: '/admin/reportes',       icon: BarChart3       },
+    { labelKey: 'sidebar.accountStatus', href: '/admin/estado-cuenta', icon: Wallet        },
     { labelKey: 'sidebar.settings',   href: '/admin/configuracion',  icon: Settings        },
   ],
   ALUMNO: [
