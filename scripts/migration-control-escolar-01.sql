@@ -510,8 +510,23 @@ AS $$
          u.nombre_completo,
          u.email,
          a.matricula,
+         -- NULL cuando el alumno no tiene plan asignado. La UI del PR 4 debe
+         -- mostrarlo como "Sin plan" y NO como celda vacia: un alumno sin plan
+         -- es una incidencia de alta que alguien tiene que resolver, no un
+         -- dato que falte por casualidad.
          pe.nombre,
          pe.duracion_meses,
+         -- BASE DE COMPARACION = meses_desbloqueados, NO modulos_desbloqueados.
+         -- Hay dos contadores de desbloqueo en alumnos y NO son equivalentes:
+         --   * meses_desbloqueados (int) lo mueven LOS TRES escritores: el
+         --     webhook (+1 o +2), desbloquear_mes (+1) y el cron semanal (al
+         --     dar de alta al alumno demo).
+         --   * modulos_desbloqueados (jsonb) SOLO lo mueve el webhook
+         --     (stripe/webhook/route.ts:123-136).
+         -- Comparar contra modulos_desbloqueados haria que todo alumno dado de
+         -- alta a mano apareciera con 0 modulos y 0 meses sin pago: "al
+         -- corriente" aunque no hubiera pagado nunca. meses_desbloqueados es el
+         -- unico contador que refleja lo que el alumno REALMENTE tiene abierto.
          a.meses_desbloqueados,
          COALESCE(g.meses_con_pago, 0)::integer,
          GREATEST(a.meses_desbloqueados - COALESCE(g.meses_con_pago, 0), 0)::integer,
@@ -524,7 +539,15 @@ AS $$
          COALESCE(u.activo, true)
     FROM public.alumnos a
     JOIN public.usuarios u        ON u.id  = a.usuario_id
-    JOIN public.planes_estudio pe ON pe.id = a.plan_estudio_id
+    -- LEFT JOIN, NO inner join: alumnos.plan_estudio_id es NULLABLE en la BD
+    -- REAL (verificado contra information_schema el 2026-07-21). El
+    -- EDVEX-SUPABASE-SETUP.sql:88 lo declara NOT NULL y esta DESACTUALIZADO.
+    -- Con un JOIN interno, todo alumno sin plan asignado desaparece del estado
+    -- de cuenta SIN ERROR: no aparece como moroso, no aparece como al
+    -- corriente, simplemente no existe para cobranza. Es exactamente el tipo de
+    -- alumno que MAS interesa ver (alta incompleta), y el fallo es invisible
+    -- porque la lista se ve perfectamente bien.
+    LEFT JOIN public.planes_estudio pe ON pe.id = a.plan_estudio_id
     LEFT JOIN agg g               ON g.alumno_id = a.id
    WHERE (p_incluir_inactivos OR COALESCE(u.activo, true))
      -- Los alumnos demo se excluyen SIEMPRE: sus pagos quedan fuera del CTE pr,
