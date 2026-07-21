@@ -129,15 +129,32 @@ ALTER TABLE public.pagos
 -- DECISION REVISADA: se DESCARTA la columna
 --   es_demo BOOLEAN GENERATED ALWAYS AS (...) STORED.
 -- Motivo: una columna GENERATED rechaza PERMANENTEMENTE cualquier INSERT que le
--- suministre valor (428C9). Los cuerpos de los 2 jobs pg_cron NO ESTAN
--- VERIFICADOS y no son modificables; formas perfectamente normales en una
--- funcion de siembra escrita a mano —"INSERT INTO pagos SELECT * FROM ...",
--- "DECLARE r public.pagos%ROWTYPE; INSERT INTO pagos VALUES (r.*)"— la romperian
--- de forma desatendida, con el error enterrado en cron.job_run_details. Y
--- revertirla exige DROP COLUMN + otra reescritura de tabla.
+-- suministre valor (428C9), y revertirla exige DROP COLUMN + otra reescritura.
 -- Una funcion IMMUTABLE + indice parcial da lo mismo (definicion unica,
 -- indexable) con riesgo cero sobre los escritores. Se pierde la visibilidad en
 -- SELECT *, que es un coste cosmetico; la vista del paso 6 la expone igual.
+--
+-- CONFIRMADO A POSTERIORI (volcado de generar_pagos_demo_diario, 2026-07-20):
+-- el job inserta con LISTA EXPLICITA de columnas
+--   (id, alumno_id, monto, mes_desbloqueado, metodo_pago, referencia,
+--    created_at, stripe_session_id, concepto)
+-- es decir, NO usa "INSERT ... SELECT *" ni "%ROWTYPE", que era el escenario
+-- que habria roto la columna GENERATED. La decision resulto correcta por un
+-- margen mas estrecho de lo que parecia: bastaba con que la funcion se hubiera
+-- escrito de la otra forma para romper un job desatendido de forma permanente.
+-- Se mantiene la funcion en vez de la columna generada porque el argumento de
+-- fondo no ha cambiado: los jobs no son modificables desde el repo y pueden
+-- reescribirse sin que nos enteremos.
+--
+-- Y CONFIRMADO tambien: el job NO nombra fecha_pago, luego el ADD COLUMN del
+-- PASO 1 (nullable + DEFAULT) no lo afecta. Ver PASO 1 sobre por que aun asi
+-- NO se pone SET NOT NULL.
+--
+-- PREFIJO REAL de referencia: 'pi_demo_auto_%' (volcado del job). El patron
+-- 'pi\_demo%' de aqui lo cubre y ademas sigue cubriendo al job SEMANAL, cuyo
+-- cuerpo NO se ha volcado y podria usar otro sufijo bajo el mismo prefijo.
+-- Se deja deliberadamente en el prefijo corto: estrecharlo a 'pi\_demo\_auto\_%'
+-- dejaria fuera al semanal y sus filas entrarian a los reportes como ingreso real.
 --
 -- El patron va con _ ESCAPADO: en LIKE, '_' es comodin de un caracter, asi que
 -- 'pi_demo%' casaba en realidad 'pi?demo…'. Con 'pi\_demo%' es literal.
@@ -154,9 +171,10 @@ COMMENT ON FUNCTION public.pago_es_demo(text) IS
   'TRUE si la fila la sembro uno de los 2 jobs pg_cron (referencia LIKE pi\_demo%). '
   'Definicion UNICA de "demo", compartida por la vista y las 3 funciones. '
   'IMMUTABLE ⇒ usable en indices. NO devuelve NULL nunca (total). '
-  'NOTA: la senal "referencia LIKE pi\_demo%" NO esta verificada contra los '
-  'cuerpos de los jobs, que no son legibles desde el repo; ver V4 y el riesgo '
-  'abierto R3 del entregable.';
+  'El job DIARIO esta verificado (prefijo real pi_demo_auto_). El job SEMANAL '
+  'NO: su cuerpo no se ha volcado, y se asume que comparte el prefijo pi_demo. '
+  'Si no lo comparte, sus filas entran a los reportes como ingreso real; la '
+  'sonda V4b lo detecta.';
 
 -- Indice parcial sobre los pagos REALES (los que alimentan reportes y cobranza).
 CREATE INDEX IF NOT EXISTS idx_pagos_reales_fecha
