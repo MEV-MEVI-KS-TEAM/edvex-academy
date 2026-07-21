@@ -205,6 +205,14 @@ export default function MateriaPage() {
     { key: 'informacion', label: t('subjects.tabInfo') },
   ]
 
+  const esTutorialMateria = materia.codigo?.toUpperCase().startsWith('TUT')
+  const etiquetaUnidadLectura = esTutorialMateria
+    ? (lang === 'en' ? 'Activity' : 'Actividad')
+    : (lang === 'en' ? 'Week' : 'Semana')
+  const etiquetaUnidadPlural = esTutorialMateria
+    ? (lang === 'en' ? 'Activities' : 'Actividades')
+    : (lang === 'en' ? 'Weeks' : 'Semanas')
+
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
@@ -286,7 +294,9 @@ export default function MateriaPage() {
                   if (!semana) return (
                     <div className="flex items-center justify-center py-16 rounded-xl" style={CARD}>
                       <p className="text-sm" style={{ color: '#94A3B8' }}>
-                        {lang === 'en' ? 'Select a week to get started' : 'Selecciona una semana para comenzar'}
+                        {esTutorialMateria
+                          ? (lang === 'en' ? 'Select an activity to get started' : 'Selecciona una actividad para comenzar')
+                          : (lang === 'en' ? 'Select a week to get started' : 'Selecciona una semana para comenzar')}
                       </p>
                     </div>
                   )
@@ -295,7 +305,7 @@ export default function MateriaPage() {
                       {/* Header de la semana */}
                       <div className="pb-3" style={{ borderBottom: '1px solid #2A2F3E' }}>
                         <span className="text-xs font-mono" style={{ color: '#6366F1' }}>
-                          {lang === 'en' ? 'Week' : 'Semana'} {semana.numero}
+                          {etiquetaUnidadLectura} {semana.numero}
                         </span>
                         <h3 className="text-base font-bold mt-0.5" style={{ color: '#F1F5F9' }}>
                           {loc(semana.titulo, semana.titulo_en)}
@@ -500,8 +510,12 @@ export default function MateriaPage() {
                     <span style={{ fontSize: '1rem', lineHeight: 1.4 }}>⚠️</span>
                     <p style={{ color: '#FDE68A' }}>
                       {lang === 'en'
-                        ? `You have ${pendientes} pending week${pendientes !== 1 ? 's' : ''}. We recommend completing them before the exam.`
-                        : `Tienes ${pendientes} semana${pendientes !== 1 ? 's' : ''} pendiente${pendientes !== 1 ? 's' : ''}. Te recomendamos completarlas antes del examen.`}
+                        ? esTutorialMateria
+                          ? `You have ${pendientes} pending ${pendientes === 1 ? 'activity' : 'activities'}. We recommend completing ${pendientes === 1 ? 'it' : 'them'} before the exam.`
+                          : `You have ${pendientes} pending week${pendientes !== 1 ? 's' : ''}. We recommend completing ${pendientes === 1 ? 'it' : 'them'} before the exam.`
+                        : esTutorialMateria
+                          ? `Tienes ${pendientes} actividad${pendientes !== 1 ? 'es' : ''} pendiente${pendientes !== 1 ? 's' : ''}. Te recomendamos completarlas antes del examen.`
+                          : `Tienes ${pendientes} semana${pendientes !== 1 ? 's' : ''} pendiente${pendientes !== 1 ? 's' : ''}. Te recomendamos completarlas antes del examen.`}
                     </p>
                   </div>
                 )}
@@ -509,7 +523,7 @@ export default function MateriaPage() {
                 {/* Checklist de semanas */}
                 <div className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: '#475569' }}>
-                    {lang === 'en' ? 'Weeks' : 'Semanas'}
+                    {etiquetaUnidadPlural}
                   </p>
                   <ul className="space-y-1.5">
                     {materia.semanas.map(s => {
