@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { ESCUELA_CONFIG } from '@/lib/config'
+import { fmtUSDCompacto } from '@/lib/format'
 
 interface DashboardStats {
   total_alumnos: number
@@ -14,9 +15,9 @@ interface DashboardStats {
   alumnos_nuevos_semana: number
 }
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(amount)
-}
+// EDVEX cobra en USD. Antes formateaba MXN sobre la misma columna `pagos.monto`
+// que el alumno paga en dolares: la etiqueta equivocada sobre el numero correcto.
+const formatCurrency = fmtUSDCompacto
 
 function MetricCard({
   label,
