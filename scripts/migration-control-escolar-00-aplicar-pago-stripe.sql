@@ -375,30 +375,19 @@ GRANT  EXECUTE ON FUNCTION public.aplicar_pago_stripe(uuid, text, numeric, text,
   TO service_role;
 
 -- -----------------------------------------------------------------------------
--- BLINDAJE DE public.desbloquear_mes  (se hace AQUI, en PR 0, no mas tarde)
+-- NOTA — el blindaje de public.desbloquear_mes NO va en este archivo
 -- -----------------------------------------------------------------------------
--- desbloquear_mes es SECURITY DEFINER, no valida quien la llama, y por las
--- default privileges de Supabase tiene EXECUTE nominal para anon/authenticated:
--- cualquier alumno autenticado puede regalarse meses de plan de pago. Es el
--- unico agujero abierto que mueve dinero.
+-- desbloquear_mes tenia EXECUTE nominal para anon/authenticated y es
+-- SECURITY DEFINER sin validar al llamador: cualquier alumno podia regalarse
+-- meses. YA FUE CERRADO en produccion (2026-07-20); proacl quedo en
+-- {postgres, service_role}. Se versiona aparte, como documentacion y retrofit
+-- re-ejecutable, en:
+--     scripts/fix-execute-rpcs-edvex.sql
+-- Aqui solo queda esta nota para que nadie lo reintroduzca al reordenar el DDL.
 --
--- Se descarta la premisa que lo difería: "un CREATE OR REPLACE resetea los
--- privilegios al default de Supabase" es FALSO. CREATE OR REPLACE reutiliza la
--- misma fila de pg_proc (mismo OID) y CONSERVA owner y proacl; ALTER DEFAULT
--- PRIVILEGES solo actua sobre objetos CREADOS. Por tanto este REVOKE sobrevive
--- al CREATE OR REPLACE de la SECCION 4 de este entregable.
---
--- VERIFICADO que no rompe nada: el unico llamador es
--- src/app/api/admin/alumnos/[id]/desbloquear-mes/route.ts:29, con
--- createAdminClient() (service_role). NO generalizar el patron:
--- recalcular_calificacion se invoca en
--- src/app/api/alumno/evaluacion/[id]/enviar/route.ts:149 con el cliente de
--- SESION (rol authenticated); revocarle EXECUTE romperia el envio de
--- evaluaciones.
-REVOKE EXECUTE ON FUNCTION public.desbloquear_mes(uuid, numeric, text, text, uuid)
-  FROM PUBLIC, anon, authenticated;
-GRANT  EXECUTE ON FUNCTION public.desbloquear_mes(uuid, numeric, text, text, uuid)
-  TO service_role;
+-- El REVOKE sobrevive al CREATE OR REPLACE de la v2 (migration-control-escolar-02):
+-- CREATE OR REPLACE reutiliza la misma fila de pg_proc (mismo OID) y conserva
+-- owner y proacl; ALTER DEFAULT PRIVILEGES solo actua sobre objetos CREADOS.
 
 RESET lock_timeout;
 
