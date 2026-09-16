@@ -88,3 +88,68 @@ const DIACRITICOS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.f
 export function norm(s: string | null | undefined): string {
   return (s ?? '').normalize('NFD').replace(DIACRITICOS, '').toLowerCase()
 }
+
+/**
+ * Referencia de pago tal como debe VERSE en el panel.
+ *
+ * Los pagos sembrados por la simulación del showroom guardan una `referencia`
+ * con el prefijo `pi_demo_` (p. ej. `pi_demo_auto_20260915_2`). Ese prefijo es
+ * la señal que usa la base para separar demo de real y NO se toca; pero al
+ * prospecto no debe llegarle: en pantalla se muestra un código neutro
+ * `PAG-XXXXXXXX` (hash estable de la referencia, 8 hex en mayúsculas). Los pagos reales —sin ese
+ * prefijo— se muestran igual que hoy. Esto es solo presentación: el dato en la
+ * base no cambia.
+ *
+ * Usar SIEMPRE este helper donde se pinte una referencia (tabla de Pagos,
+ * detalle del alumno, etc.) para no duplicar la lógica.
+ */
+const PREFIJO_DEMO = 'pi_demo_'
+
+/**
+ * Hash FNV-1a de 32 bits (determinista, sin dependencias). Se usa para derivar
+ * un código de pago estable a partir de la referencia completa: misma referencia
+ * => mismo código, siempre. `Math.imul` mantiene la multiplicación en 32 bits y
+ * `>>> 0` la deja como entero sin signo.
+ */
+function fnv1a32(str: string): number {
+  let h = 0x811c9dc5
+  for (let i = 0; i < str.length; i++) {
+    h ^= str.charCodeAt(i)
+    h = Math.imul(h, 0x01000193)
+  }
+  return h >>> 0
+}
+
+export function referenciaVisible(ref: string | null | undefined): string {
+  if (!ref) return '—'
+  if (ref.startsWith(PREFIJO_DEMO)) {
+    // Hash de la referencia COMPLETA -> 8 hex en mayúsculas. No se usan los
+    // últimos caracteres (daban códigos raros y podían repetirse); el hash es
+    // estable y prácticamente único por referencia. Ej. "PAG-7F3A9C21".
+    return 'PAG-' + fnv1a32(ref).toString(16).toUpperCase().padStart(8, '0')
+  }
+  return ref
+}
+
+/**
+ * Cadena por la que debe filtrar el buscador de Pagos. Para una referencia demo
+ * es SOLO su forma visible (el código `PAG-…`), nunca el valor crudo: así,
+ * escribir "demo" o "pi_" en el buscador no devuelve las filas sembradas. Para
+ * un pago real es su referencia cruda, igual que hoy.
+ */
+export function referenciaBuscable(ref: string | null | undefined): string {
+  if (!ref) return ''
+  if (ref.startsWith(PREFIJO_DEMO)) return referenciaVisible(ref)
+  return ref
+}
+
+/**
+ * ¿Mostrar el badge "Datos de demostración"?
+ *
+ * Antes se mostraba siempre que la instancia estuviera en modo showroom, pero el
+ * prospecto NO debe notar que es una demo. Ahora el badge está APAGADO por
+ * defecto y solo aparece si se activa explícitamente `NEXT_PUBLIC_SHOWROOM_BADGE`
+ * (uso interno). Es una variable NUEVA e independiente de `NEXT_PUBLIC_SHOWROOM`,
+ * que sigue eligiendo las RPC `_demo` exactamente igual que antes.
+ */
+export const MOSTRAR_BADGE_DEMO = process.env.NEXT_PUBLIC_SHOWROOM_BADGE === 'true'

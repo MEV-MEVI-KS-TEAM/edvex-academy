@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Receipt, Search, Info } from 'lucide-react'
-import { fmtUSD, fmtFecha, norm } from '@/lib/format'
+import { fmtUSD, fmtFecha, norm, referenciaVisible, referenciaBuscable, MOSTRAR_BADGE_DEMO } from '@/lib/format'
 
 interface PagoAdmin {
   id: string
@@ -87,7 +87,7 @@ export default function PagosPage() {
           norm(p.alumno_nombre).includes(q)
           || norm(p.alumno_matricula ?? '').includes(q)
           || norm(p.concepto ?? '').includes(q)
-          || norm(p.referencia ?? '').includes(q))
+          || norm(referenciaBuscable(p.referencia)).includes(q))
       : pagos
     return {
       porBusqueda: lista,
@@ -126,7 +126,7 @@ export default function PagosPage() {
       <div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h2 className="text-xl font-bold" style={{ color: '#F1F5F9' }}>Pagos</h2>
-          {esShowroom && (
+          {esShowroom && MOSTRAR_BADGE_DEMO && (
             <span
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
               style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}
@@ -266,7 +266,7 @@ export default function PagosPage() {
                     </td>
                     <td className="px-4 py-3 max-w-[160px]">
                       <span className="block truncate font-mono text-[11px]" style={{ color: '#64748B' }}>
-                        {p.referencia ?? '—'}
+                        {referenciaVisible(p.referencia)}
                       </span>
                     </td>
                   </tr>
