@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { alumnoPuedeAccederEvaluacion } from '@/lib/alumno-evaluacion-access'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 export async function POST(
   request: NextRequest,
@@ -10,6 +11,10 @@ export async function POST(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+    // Cuenta demo compartida (prospectos): califica y ve el resultado, pero no
+    // consume intentos, no persiste el intento ni recalcula/desbloquea nada.
+    const protegido = esAlumnoProtegido(user.id)
 
     // Obtener alumno
     const { data: alumnoData } = await supabase
@@ -58,16 +63,20 @@ export async function POST(
       return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
     }
 
-    // Verificar intentos disponibles
-    const { count: intentosUsados } = await supabase
-      .from('intentos_evaluacion')
-      .select('id', { count: 'exact', head: true })
-      .eq('alumno_id', alumno.id)
-      .eq('evaluacion_id', params.id)
+    // Verificar intentos disponibles. La cuenta protegida NUNCA se bloquea por
+    // intentos_max (se salta el conteo).
+    let usados = 0
+    if (!protegido) {
+      const { count: intentosUsados } = await supabase
+        .from('intentos_evaluacion')
+        .select('id', { count: 'exact', head: true })
+        .eq('alumno_id', alumno.id)
+        .eq('evaluacion_id', params.id)
 
-    const usados = intentosUsados ?? 0
-    if (usados >= ev.intentos_max) {
-      return NextResponse.json({ error: 'No tienes más intentos disponibles' }, { status: 400 })
+      usados = intentosUsados ?? 0
+      if (usados >= ev.intentos_max) {
+        return NextResponse.json({ error: 'No tienes más intentos disponibles' }, { status: 400 })
+      }
     }
 
     // Obtener respuestas del alumno
@@ -128,28 +137,33 @@ export async function POST(
     const aprobado = calificacion >= 6.0
     const intentoNumero = usados + 1
 
-    // Insertar intento
-    const { error: intentoError } = await supabase
-      .from('intentos_evaluacion')
-      .insert({
-        alumno_id: alumno.id,
-        evaluacion_id: params.id,
-        respuestas: respuestasAlumno,
-        calificacion,
-        aprobado,
-        intento_numero: intentoNumero,
-        tiempo_segundos: 0,
+    // La cuenta protegida (demo de prospectos) NO persiste el intento ni recalcula
+    // la materia: así no consume intentos, no dispara desbloqueos ni
+    // acreditaciones, y no altera el progreso compartido. Los alumnos normales sí.
+    if (!protegido) {
+      // Insertar intento
+      const { error: intentoError } = await supabase
+        .from('intentos_evaluacion')
+        .insert({
+          alumno_id: alumno.id,
+          evaluacion_id: params.id,
+          respuestas: respuestasAlumno,
+          calificacion,
+          aprobado,
+          intento_numero: intentoNumero,
+          tiempo_segundos: 0,
+        })
+
+      if (intentoError) {
+        return NextResponse.json({ error: intentoError.message }, { status: 500 })
+      }
+
+      // Recalcular calificación de la materia
+      await supabase.rpc('recalcular_calificacion', {
+        p_alumno_id: alumno.id,
+        p_materia_id: ev.materia_id,
       })
-
-    if (intentoError) {
-      return NextResponse.json({ error: intentoError.message }, { status: 500 })
     }
-
-    // Recalcular calificación de la materia
-    await supabase.rpc('recalcular_calificacion', {
-      p_alumno_id: alumno.id,
-      p_materia_id: ev.materia_id,
-    })
 
     return NextResponse.json({
       calificacion,

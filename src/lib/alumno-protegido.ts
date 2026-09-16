@@ -10,10 +10,20 @@
  * ven afectados en nada. Si la variable está vacía o ausente, no hay ninguna
  * cuenta protegida (comportamiento previo).
  */
-const IDS_PROTEGIDOS = (process.env.ALUMNOS_PROTEGIDOS ?? '')
+/**
+ * Default en código: la cuenta demo de ALUMNO que se comparte con los prospectos
+ * (serranomas@outlook.com). No es un secreto —es un user id— y va aquí para que la
+ * protección funcione aunque no se configure la env en el hosting. La env
+ * `ALUMNOS_PROTEGIDOS` (si existe) SE SUMA a esta lista, no la reemplaza.
+ */
+const IDS_DEFAULT = ['50e1f467-766b-401d-8473-70e014873ec0']
+
+const IDS_ENV = (process.env.ALUMNOS_PROTEGIDOS ?? '')
   .split(',')
   .map((s) => s.trim())
   .filter(Boolean)
+
+const IDS_PROTEGIDOS = [...new Set([...IDS_DEFAULT, ...IDS_ENV])]
 
 export function esAlumnoProtegido(userId: string | null | undefined): boolean {
   return !!userId && IDS_PROTEGIDOS.includes(userId)
