@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 export async function GET() {
   try {
@@ -40,6 +41,8 @@ export async function GET() {
       nombre_completo: a.usuarios?.nombre_completo ?? '',
       email: a.usuarios?.email ?? '',
       avatar_url: a.usuarios?.avatar_url ?? null,
+      // Cuenta demo compartida (prospectos): la UI oculta cambiar contraseña y foto.
+      protegido: esAlumnoProtegido(user.id),
     })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

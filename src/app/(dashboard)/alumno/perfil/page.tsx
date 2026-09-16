@@ -17,6 +17,7 @@ interface Perfil {
   email: string
   avatar_url?: string | null
   created_at?: string
+  protegido?: boolean
 }
 
 const CARD = { background: '#181C26', border: '1px solid #2A2F3E' }
@@ -160,7 +161,8 @@ export default function PerfilPage() {
             )}
           </div>
 
-          {/* Upload button */}
+          {/* Upload button — oculto en la cuenta demo compartida */}
+          {!perfil?.protegido && (
           <div className="space-y-1.5">
             <input
               ref={fileInputRef}
@@ -182,6 +184,7 @@ export default function PerfilPage() {
             </button>
             <p className="text-xs" style={{ color: '#475569' }}>JPG, PNG o WebP · máx. 2 MB</p>
           </div>
+          )}
         </div>
       </div>
 
@@ -220,7 +223,8 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {/* Card Cambiar Contraseña */}
+      {/* Card Cambiar Contraseña — oculta en la cuenta demo compartida */}
+      {!perfil?.protegido && (
       <div className="rounded-xl overflow-hidden" style={CARD}>
         <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: '1px solid #2A2F3E' }}>
           <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'rgba(245,158,11,0.15)' }}>
@@ -290,6 +294,7 @@ export default function PerfilPage() {
           </form>
         </div>
       </div>
+      )}
 
       {/* Card Datos de la Escuela */}
       <div className="rounded-xl overflow-hidden" style={CARD}>
