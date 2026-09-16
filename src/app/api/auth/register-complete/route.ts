@@ -62,6 +62,8 @@ export async function POST(req: NextRequest) {
           inscripcion_pagada: false,
           modulos_desbloqueados: [],
           telefono,
+          // Alta por /register (persona real): se oculta del padrón demo admin.
+          autorregistro: true,
         })
 
       if (!alumnoError) break
