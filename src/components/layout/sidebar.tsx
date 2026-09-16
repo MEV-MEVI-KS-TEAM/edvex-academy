@@ -108,8 +108,14 @@ export function Sidebar({ role, userName, isOpen, onClose }: SidebarProps) {
 
   async function handleSignOut() {
     const supabase = createClient()
-    await supabase.auth.signOut()
+    // scope: 'local' cierra SOLO la sesión de ESTE navegador. El default de
+    // supabase-js es scope: 'global', que revoca en el servidor TODAS las
+    // sesiones del usuario en todos los dispositivos. Como los vendedores
+    // comparten la cuenta demo, un signOut global sacaba a todos los demás en su
+    // siguiente request (el middleware hace getUser() y la sesión ya no existe).
+    await supabase.auth.signOut({ scope: 'local' })
     router.push('/login')
+    router.refresh()
   }
 
   const isActive = (href: string) => {

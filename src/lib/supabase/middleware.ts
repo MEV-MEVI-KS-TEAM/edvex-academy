@@ -35,11 +35,21 @@ export async function updateSession(request: NextRequest) {
   // Excepción: "/" es la landing pública, no se redirige aunque esté autenticado
   const isLandingRoot = request.nextUrl.pathname === '/'
   if (user && isPublicRoute && !isLandingRoot) {
-    const { data: usuario } = await supabase
+    const { data: usuario, error } = await supabase
       .from('usuarios')
       .select('rol, activo')
       .eq('id', user.id)
       .single()
+
+    // Si la consulta falla (red, RLS, timeout) o no hay fila, se DEJA PASAR a la
+    // ruta pública en vez de rebotar a /login. Evita un bucle /login → /login:
+    // con `usuario` en null, `destination` de abajo caía en '/login' y, estando
+    // ya en /login, el redirect volvía a disparar este mismo bloque
+    // indefinidamente (ERR_TOO_MANY_REDIRECTS). No toca la lógica de `activo`
+    // ni de roles del PR #18: solo blinda el caso de lectura fallida/ausente.
+    if (error || !usuario) {
+      return supabaseResponse
+    }
 
     // ADMIN desactivado: se le deja en la ruta pública en vez de rebotarle a
     // /admin.
