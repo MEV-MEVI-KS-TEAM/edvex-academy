@@ -88,3 +88,37 @@ const DIACRITICOS = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.f
 export function norm(s: string | null | undefined): string {
   return (s ?? '').normalize('NFD').replace(DIACRITICOS, '').toLowerCase()
 }
+
+/**
+ * Referencia de pago tal como debe VERSE en el panel.
+ *
+ * Los pagos sembrados por la simulación del showroom guardan una `referencia`
+ * con el prefijo `pi_demo_` (p. ej. `pi_demo_auto_20260915_2`). Ese prefijo es
+ * la señal que usa la base para separar demo de real y NO se toca; pero al
+ * prospecto no debe llegarle: en pantalla se muestra un código neutro
+ * `PAG-XXXXXXXX` (sin prefijo, en mayúsculas). Los pagos reales —sin ese
+ * prefijo— se muestran igual que hoy. Esto es solo presentación: el dato en la
+ * base no cambia.
+ *
+ * Usar SIEMPRE este helper donde se pinte una referencia (tabla de Pagos,
+ * detalle del alumno, etc.) para no duplicar la lógica.
+ */
+const PREFIJO_DEMO = 'pi_demo_'
+export function referenciaVisible(ref: string | null | undefined): string {
+  if (!ref) return '—'
+  if (ref.startsWith(PREFIJO_DEMO)) {
+    return 'PAG-' + ref.slice(PREFIJO_DEMO.length).slice(-8).toUpperCase()
+  }
+  return ref
+}
+
+/**
+ * ¿Mostrar el badge "Datos de demostración"?
+ *
+ * Antes se mostraba siempre que la instancia estuviera en modo showroom, pero el
+ * prospecto NO debe notar que es una demo. Ahora el badge está APAGADO por
+ * defecto y solo aparece si se activa explícitamente `NEXT_PUBLIC_SHOWROOM_BADGE`
+ * (uso interno). Es una variable NUEVA e independiente de `NEXT_PUBLIC_SHOWROOM`,
+ * que sigue eligiendo las RPC `_demo` exactamente igual que antes.
+ */
+export const MOSTRAR_BADGE_DEMO = process.env.NEXT_PUBLIC_SHOWROOM_BADGE === 'true'

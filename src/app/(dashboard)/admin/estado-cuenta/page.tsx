@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Wallet, Search, CheckCircle2, AlertTriangle } from 'lucide-react'
-import { fmtUSD, fmtFecha, norm } from '@/lib/format'
+import { fmtUSD, fmtFecha, norm, MOSTRAR_BADGE_DEMO } from '@/lib/format'
 
 interface EstadoAlumno {
   id: string
@@ -137,7 +137,7 @@ export default function EstadoCuentaPage() {
       <div>
         <div className="flex items-center gap-2.5 flex-wrap">
           <h2 className="text-xl font-bold" style={{ color: '#F1F5F9' }}>Estado de Cuenta</h2>
-          {esShowroom && (
+          {esShowroom && MOSTRAR_BADGE_DEMO && (
             <span
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
               style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}

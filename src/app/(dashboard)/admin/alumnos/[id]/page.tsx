@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useParams } from 'next/navigation'
 import { ArrowLeft, X, Loader2, CreditCard, Key, Eye, EyeOff, Download, FileText, Pencil, MessageCircle } from 'lucide-react'
+import { referenciaVisible } from '@/lib/format'
 import { useToast, ToastContainer } from '@/components/ui/toast'
 
 interface AlumnoDetalle {
@@ -509,7 +510,7 @@ export default function AlumnoDetallePage() {
                     <td className="px-4 py-3 font-medium" style={{ color: '#F1F5F9' }}>Mes {p.mes_desbloqueado}</td>
                     <td className="px-4 py-3 font-medium" style={{ color: '#10B981' }}>${p.monto.toLocaleString('es-MX')}</td>
                     <td className="px-4 py-3" style={{ color: '#94A3B8' }}>{p.metodo_pago}</td>
-                    <td className="px-4 py-3" style={{ color: '#94A3B8' }}>{p.referencia ?? '—'}</td>
+                    <td className="px-4 py-3" style={{ color: '#94A3B8' }}>{referenciaVisible(p.referencia)}</td>
                   </tr>
                 ))}
               </tbody>

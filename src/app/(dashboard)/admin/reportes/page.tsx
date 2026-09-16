@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { Users, UserCheck, DollarSign, TrendingUp, Loader2, BookOpen, Award, CalendarRange } from 'lucide-react'
-import { fmtUSD, fmtFecha, fmtSemana, fmtMes } from '@/lib/format'
+import { fmtUSD, fmtFecha, fmtSemana, fmtMes, MOSTRAR_BADGE_DEMO } from '@/lib/format'
 
 interface Stats {
   total_alumnos: number
@@ -163,7 +163,7 @@ export default function ReportesPage() {
           {/* En un showroom, que el espectador sepa que los datos son sembrados
               es una característica, no una fuga: evita que alguien tome estos
               importes por ventas reales. */}
-          {esShowroom && (
+          {esShowroom && MOSTRAR_BADGE_DEMO && (
             <span
               className="text-[10px] font-semibold px-2 py-0.5 rounded-full uppercase tracking-wide"
               style={{ background: 'rgba(245,158,11,0.15)', color: '#F59E0B' }}
