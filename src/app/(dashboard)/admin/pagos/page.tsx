@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import Link from 'next/link'
 import { Loader2, Receipt, Search, Info } from 'lucide-react'
-import { fmtUSD, fmtFecha, norm, referenciaVisible, MOSTRAR_BADGE_DEMO } from '@/lib/format'
+import { fmtUSD, fmtFecha, norm, referenciaVisible, referenciaBuscable, MOSTRAR_BADGE_DEMO } from '@/lib/format'
 
 interface PagoAdmin {
   id: string
@@ -87,8 +87,7 @@ export default function PagosPage() {
           norm(p.alumno_nombre).includes(q)
           || norm(p.alumno_matricula ?? '').includes(q)
           || norm(p.concepto ?? '').includes(q)
-          || norm(p.referencia ?? '').includes(q)
-          || norm(referenciaVisible(p.referencia)).includes(q))
+          || norm(referenciaBuscable(p.referencia)).includes(q))
       : pagos
     return {
       porBusqueda: lista,
