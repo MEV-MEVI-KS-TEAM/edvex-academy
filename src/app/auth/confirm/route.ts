@@ -87,6 +87,9 @@ export async function GET(request: NextRequest) {
           inscripcion_pagada: false,
           modulos_desbloqueados: [],
           telefono,
+          // Alta por /register: se marca como autorregistro para ocultarlo del
+          // padrón que ven los administradores (no es un alumno demo sembrado).
+          autorregistro: true,
         })
         alumnoError = result.error
         if (!alumnoError) break
