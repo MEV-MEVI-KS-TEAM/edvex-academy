@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyStaff } from '@/lib/supabase/verify-admin'
 import { filtroEsDemo, ES_SHOWROOM } from '@/lib/reportes/rpc'
+import { idsAlumnosAutorregistro, listaIn } from '@/lib/admin/autorregistro'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,6 +40,8 @@ export async function GET() {
     // misma fuente que alimenta /api/admin/reportes, de modo que el historial y
     // los totales no pueden discrepar.
     const filtro = filtroEsDemo()
+    // Ocultar los pagos de los alumnos de autorregistro (no son padrón demo).
+    const ocultarAlumnos = await idsAlumnosAutorregistro(admin)
     let q = admin
       .from('v_pagos_clasificados')
       .select('id, alumno_id, monto, concepto, categoria, metodo_pago, referencia, mes_desbloqueado, meses_cubiertos, stripe_session_id, registrado_por, fecha_pago, created_at, es_demo', { count: 'exact' })
@@ -46,6 +49,7 @@ export async function GET() {
       .order('created_at', { ascending: false })
       .limit(500)
     if (filtro === false) q = q.eq('es_demo', false)
+    if (ocultarAlumnos.length > 0) q = q.not('alumno_id', 'in', listaIn(ocultarAlumnos))
 
     const { data, error, count } = await q
 

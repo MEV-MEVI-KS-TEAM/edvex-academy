@@ -7,6 +7,7 @@ import {
   documentoStoragePath,
   EXTENSIONES_FALLBACK,
 } from '@/lib/admin/documentos-admin'
+import { idsAlumnosAutorregistro, listaIn } from '@/lib/admin/autorregistro'
 
 export const dynamic = 'force-dynamic'
 
@@ -35,11 +36,16 @@ export async function GET() {
     // Ordenado por subido_en: es la única columna de fecha de alta que existe en
     // EDVEX (plantilla reintenta con `fecha_subida` por su esquema legacy; aquí
     // ese fallback sería código muerto).
-    const { data, error } = await admin
+    // Ocultar los documentos de los alumnos de autorregistro (no son padrón demo).
+    const ocultarAlumnos = await idsAlumnosAutorregistro(admin)
+    let q = admin
       .from('documentos_alumno')
       .select('*')
       .order('subido_en', { ascending: false })
       .limit(500)
+    if (ocultarAlumnos.length > 0) q = q.not('alumno_id', 'in', listaIn(ocultarAlumnos))
+
+    const { data, error } = await q
 
     if (error) {
       console.error('[GET /api/admin/documentos]', error.code, error.message)
