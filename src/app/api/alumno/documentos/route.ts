@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { esAlumnoProtegido, MENSAJE_ALUMNO_PROTEGIDO } from '@/lib/alumno-protegido'
 
 export async function GET() {
   try {
@@ -41,6 +42,9 @@ export async function POST(req: NextRequest) {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+    if (esAlumnoProtegido(user.id)) {
+      return NextResponse.json({ error: MENSAJE_ALUMNO_PROTEGIDO }, { status: 403 })
+    }
 
     const formData = await req.formData()
     const archivo = formData.get('archivo') as File | null
