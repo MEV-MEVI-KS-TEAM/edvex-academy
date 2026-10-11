@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { firmarVideoUrl } from '@/lib/video/bunny-firma'
 
 export async function GET(
   _request: NextRequest,
@@ -70,8 +71,19 @@ export async function GET(
       evaluaciones: { id: string; titulo: string; titulo_en: string; tipo: string; intentos_max: number; activa: boolean }[]
     }
 
-    // Ordenar semanas por número
-    const semanas = (m.semanas ?? []).sort((a, b) => a.numero - b.numero)
+    // Ordenar semanas por número. Bunny Stream se firma AQUÍ, después del control
+    // de acceso de arriba: la URL firmada es la llave del video por 6 horas.
+    // YouTube y cualquier otra URL salen tal cual (firmarVideoUrl no las toca).
+    const semanas = (m.semanas ?? [])
+      .sort((a, b) => a.numero - b.numero)
+      .map(s => ({
+        ...s,
+        videos: (s.videos ?? []).map(v => ({
+          ...v,
+          url: firmarVideoUrl(v.url, 'api/alumno/materia'),
+          url_en: v.url_en ? firmarVideoUrl(v.url_en, 'api/alumno/materia') : v.url_en,
+        })),
+      }))
 
     // Una sola query para todos los intentos de todas las evaluaciones activas
     const evaluacionesActivas = (m.evaluaciones ?? []).filter(e => e.activa)
