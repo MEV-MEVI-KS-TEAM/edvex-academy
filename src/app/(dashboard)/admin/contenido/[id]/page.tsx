@@ -8,9 +8,11 @@ import {
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ToastContainer, useToast } from '@/components/ui/toast'
+import { BunnyVistaPrevia } from '@/components/admin/BunnyVistaPrevia'
+import { esBunnyUrl } from '@/lib/video/bunny-url'
 
 /* ---------- types ---------- */
-interface VideoItem { titulo: string; url: string; duracion: string }
+interface VideoItem { titulo: string; url: string; duracion: string; titulo_en?: string | null; url_en?: string | null }
 interface Opcion   { id: string; texto: string; es_correcta: boolean }
 interface Pregunta { id: string; numero: number; texto: string; tipo: string; retroalimentacion: string | null; opciones: Opcion[] }
 interface Evaluacion { id: string; titulo: string; tipo: string; intentos_max: number; preguntas: Pregunta[] }
@@ -132,12 +134,20 @@ export default function ContenidoDetallePage() {
     setSaving(prev => ({ ...prev, [semana.id]: true }))
 
     // Build videos array – only include non-empty URLs
+    // Si la URL de ese lugar no cambió, se conservan sus campos en inglés
+    // (titulo_en, url_en): guardar sin tocarla no debe borrar la versión en inglés.
     const videos: VideoItem[] = urls
-      .map((url, i) => ({
-        titulo: semana.videos?.[i]?.titulo || VIDEO_LABELS[i],
-        url: url.trim(),
-        duracion: semana.videos?.[i]?.duracion ?? '',
-      }))
+      .map((url, i) => {
+        const previo = semana.videos?.[i]
+        const igual = !!previo && previo.url === url.trim()
+        return {
+          ...(igual && previo.titulo_en !== undefined ? { titulo_en: previo.titulo_en } : {}),
+          ...(igual && previo.url_en !== undefined ? { url_en: previo.url_en } : {}),
+          titulo: previo?.titulo || VIDEO_LABELS[i],
+          url: url.trim(),
+          duracion: previo?.duracion ?? '',
+        }
+      })
       .filter(v => v.url !== '')
 
     try {
@@ -306,7 +316,10 @@ export default function ContenidoDetallePage() {
                                 {VIDEO_LABELS[idx]}
                               </p>
 
-                              {/* Thumbnail */}
+                              {/* Thumbnail (video propio: vista previa firmada por el servidor) */}
+                              {esBunnyUrl(url) ? (
+                                <BunnyVistaPrevia url={url} titulo={sem.titulo} oscuro />
+                              ) : (
                               <div
                                 className="relative rounded-lg overflow-hidden flex items-center justify-center"
                                 style={{ background: '#181C26', border: '1px solid #2A2F3E', aspectRatio: '16/9' }}
@@ -339,6 +352,7 @@ export default function ContenidoDetallePage() {
                                   </div>
                                 )}
                               </div>
+                              )}
 
                               {/* URL input */}
                               <input
