@@ -69,13 +69,20 @@ interface SidebarProps {
   userName: string
   isOpen:   boolean
   onClose:  () => void
+  /** Alumno de un área (secundaria, cursos de ingreso, licenciatura): su programa vive en Mis cursos. */
+  soloCursos?: boolean
 }
 
-export function Sidebar({ role, userName, isOpen, onClose }: SidebarProps) {
+// Lo que ve un alumno de área: su contenido está en Mis cursos (sin materias por mes de Preparatoria).
+const SOLO_CURSOS = new Set(['/alumno/cursos', '/alumno/documentos', '/alumno/perfil'])
+
+export function Sidebar({ role, userName, isOpen, onClose, soloCursos = false }: SidebarProps) {
   const pathname  = usePathname()
   const router    = useRouter()
   const { t }     = useLanguage()
-  const navItems  = NAV_ITEMS[role]
+  const navItems  = soloCursos && role === 'ALUMNO'
+    ? NAV_ITEMS.ALUMNO.filter(i => SOLO_CURSOS.has(i.href))
+    : NAV_ITEMS[role]
   const [pendientesCount, setPendientesCount] = useState(0)
 
   // Fetch badge de alumnos pendientes solo para admins

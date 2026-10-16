@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { canonizarVideoUrl } from '@/lib/video/bunny-url'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { verifyAdmin } from '@/lib/supabase/verify-admin'
@@ -66,7 +67,8 @@ export async function PATCH(
       updates.titulo_en = (body.titulo_en as string | null)?.toString().trim() || ''
     }
     if (body.video_url !== undefined) {
-      updates.video_url = (body.video_url as string | null)?.toString().trim() || null
+      // Video propio (Bunny) se guarda SIEMPRE canónico (sin token ni expires)
+      updates.video_url = canonizarVideoUrl((body.video_url as string | null)?.toString().trim() || null)
     }
     if (body.contenido_texto !== undefined) {
       updates.contenido_texto = (body.contenido_texto as string | null)?.toString().trim() || null

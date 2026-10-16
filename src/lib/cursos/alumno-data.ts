@@ -10,6 +10,7 @@
  * `alumnoId`. NUNCA se compara `alumno_id` contra `auth.uid()`.
  */
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { firmarVideoUrl } from '@/lib/video/bunny-firma'
 import { SIGNED_URL_TTL } from './storage'
 import { BUCKET_CURSOS } from './archivos'
 import type { LeccionAlumno, ModuloAlumno } from '@/types/cursos-alumno'
@@ -90,7 +91,9 @@ export async function modulosConProgreso(
       id: l.id as string,
       titulo: l.titulo as string,
       titulo_en: (l.titulo_en as string | null) ?? '',
-      video_url: (l.video_url as string | null) ?? null,
+      // Video propio (Bunny) firmado aquí, en el servidor: estas lecciones ya pasaron
+      // por la RLS (solo cursos publicados e inscritos). Port plantilla #306.
+      video_url: firmarVideoUrl((l.video_url as string | null) ?? null, 'cursos/alumno-data'),
       contenido_texto: (l.contenido_texto as string | null) ?? null,
       contenido_texto_en: (l.contenido_texto_en as string | null) ?? '',
       materialUrl: await signed(supabase, l.material_path as string | null),

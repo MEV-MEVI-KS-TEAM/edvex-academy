@@ -48,6 +48,16 @@ export default async function AlumnoLayout({
 
   if (usuario.rol !== 'ALUMNO') redirect('/admin')
 
+  // Alumno de un área (secundaria, cursos de ingreso, licenciatura): su programa
+  // vive en Mis cursos. NULL = Preparatoria, exactamente como antes. Un fallo de
+  // esta lectura deja el menú completo (nunca expulsa ni rompe la página).
+  const { data: alumnoArea } = await supabase
+    .from('alumnos')
+    .select('area')
+    .eq('usuario_id', user.id)
+    .maybeSingle()
+  const soloCursos = Boolean((alumnoArea as { area?: string | null } | null)?.area)
+
   return (
     <DashboardLayout
       role="ALUMNO"
@@ -55,6 +65,7 @@ export default async function AlumnoLayout({
       avatarUrl={(usuario as unknown as { avatar_url?: string | null }).avatar_url ?? null}
       pageTitle="header.studentPortal"
       showFooter={true}
+      soloCursos={soloCursos}
     >
       <PageTransition>{children}</PageTransition>
     </DashboardLayout>
