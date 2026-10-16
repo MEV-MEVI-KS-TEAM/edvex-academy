@@ -91,8 +91,10 @@ export async function modulosConProgreso(
       id: l.id as string,
       titulo: l.titulo as string,
       titulo_en: (l.titulo_en as string | null) ?? '',
-      // Video propio (Bunny) firmado aquí, en el servidor: estas lecciones ya pasaron
-      // por la RLS (solo cursos publicados e inscritos). Port plantilla #306.
+      // Video propio (Bunny) firmado aquí, en el servidor. ⚠️ Quien llame a esta
+      // función debe haber verificado ANTES el acceso al curso (la ruta
+      // /api/alumno/cursos/[id] lo carga con la sesión del alumno: RLS = publicado +
+      // inscrito, si no 404): aquí puede llegar el cliente admin. Port plantilla #306.
       video_url: firmarVideoUrl((l.video_url as string | null) ?? null, 'cursos/alumno-data'),
       contenido_texto: (l.contenido_texto as string | null) ?? null,
       contenido_texto_en: (l.contenido_texto_en as string | null) ?? '',

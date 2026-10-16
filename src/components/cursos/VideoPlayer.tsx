@@ -22,7 +22,7 @@ import { useLanguage } from '@/context/LanguageContext'
  * `titulo` llega ya localizado por el padre (loc(titulo, titulo_en)).
  */
 export function VideoPlayer({ url, titulo }: { url: string; titulo: string }) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const parsed = parseVideoUrl(url)
   // Caducidad decidida al montar (por URL): un re-render no desmonta un video que suena.
   const caducada = useMemo(() => {
@@ -40,7 +40,9 @@ export function VideoPlayer({ url, titulo }: { url: string; titulo: string }) {
         role="status"
       >
         <VideoOff className="w-4 h-4 flex-shrink-0" />
-        {caducada ? VIDEO_CADUCADO : VIDEO_NO_DISPONIBLE}
+        {lang === 'en'
+          ? (caducada ? 'This video link expired. Reload the page to watch it.' : 'Video not available right now')
+          : (caducada ? VIDEO_CADUCADO : VIDEO_NO_DISPONIBLE)}
       </p>
     )
   }

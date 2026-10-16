@@ -151,7 +151,10 @@ export async function updateSession(request: NextRequest) {
     if ((alumnoArea as { area?: string | null } | null)?.area) {
       const url = request.nextUrl.clone()
       url.pathname = '/alumno/cursos'
-      return NextResponse.redirect(url)
+      const redireccion = NextResponse.redirect(url)
+      // conservar las cookies de sesión que updateSession pudo refrescar
+      supabaseResponse.cookies.getAll().forEach(c => redireccion.cookies.set(c))
+      return redireccion
     }
   }
 
