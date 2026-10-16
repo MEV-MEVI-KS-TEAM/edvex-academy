@@ -12,12 +12,18 @@
  * el embedUrl con IDs validados por regex.
  */
 
-export type VideoProvider = 'youtube' | 'vimeo' | 'loom'
+import { bunnyCanonica, bunnyEmbedFirmado, parseBunnyUrl } from '@/lib/video/bunny-url'
 
-export interface ParsedVideo {
-  provider: VideoProvider
-  embedUrl: string
-}
+// Bunny Stream (player/iframe.mediadelivery.net/embed/{biblioteca}/{GUID}): se
+// reconoce aquí, pero su `embedUrl` solo existe si la URL YA viene firmada por el
+// servidor (lib/video/bunny-firma.ts); la canónica sin token da `embedUrl: null`.
+// Port de la plantilla PV #306.
+export type VideoProvider = 'youtube' | 'vimeo' | 'loom' | 'bunny'
+
+export type ParsedVideo =
+  | { provider: 'youtube' | 'vimeo' | 'loom'; embedUrl: string }
+  /** embedUrl null = Bunny sin firmar: no hay iframe que montar. */
+  | { provider: 'bunny'; embedUrl: string | null; canonica: string }
 
 /** Convierte "1h2m30s", "90s", "90" → segundos. Retorna null si no es válido. */
 function parseTimeParam(t: string | null): number | null {
@@ -55,6 +61,17 @@ export function parseVideoUrl(url: string): ParsedVideo | null {
     return null
   }
   if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') return null
+
+  // ── Bunny Stream ───────────────────────────────────────────────────────────
+  // Antes que nada: su ruta /embed/… no debe caer en ningún otro proveedor.
+  const bunny = parseBunnyUrl(url)
+  if (bunny) {
+    return {
+      provider: 'bunny',
+      embedUrl: bunnyEmbedFirmado(bunny),
+      canonica: bunnyCanonica(bunny.libraryId, bunny.videoId),
+    }
+  }
 
   const host = parsed.hostname.toLowerCase().replace(/^www\./, '')
   const path = parsed.pathname

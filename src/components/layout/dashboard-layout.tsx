@@ -15,6 +15,8 @@ interface DashboardLayoutProps {
   avatarUrl?: string | null
   pageTitle: string
   showFooter?: boolean
+  /** Alumno de un área: el menú solo muestra Mis cursos, documentos y perfil. */
+  soloCursos?: boolean
 }
 
 export function DashboardLayout({
@@ -24,6 +26,7 @@ export function DashboardLayout({
   avatarUrl,
   pageTitle,
   showFooter = false,
+  soloCursos = false,
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { t } = useLanguage()
@@ -40,6 +43,7 @@ export function DashboardLayout({
         userName={userName}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        soloCursos={soloCursos}
       />
 
       <div className="flex flex-col flex-1 min-w-0 md:ml-[260px]">

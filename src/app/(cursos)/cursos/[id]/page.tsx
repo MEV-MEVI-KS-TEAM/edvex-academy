@@ -7,6 +7,7 @@ import {
   Circle, Download, Eye, FileText, List, Loader2, PartyPopper, X,
 } from 'lucide-react'
 import { VideoPlayer } from '@/components/cursos/VideoPlayer'
+import ContenidoMarkdown, { normalizarContenido } from '@/components/ContenidoMarkdown'
 import { ProgressBar } from '@/components/cursos/ProgressBar'
 import { porcentajeProgreso, cursoCompletado } from '@/lib/cursos/progreso'
 import { useLanguage } from '@/context/LanguageContext'
@@ -284,9 +285,10 @@ export default function VisorCursoPage() {
                 {activaTexto && (
                   <div
                     className="text-sm leading-relaxed rounded-2xl p-4 sm:p-5"
-                    style={{ background: '#181C26', border: '1px solid #2A2F3E', color: '#CBD5E1', whiteSpace: 'pre-wrap' }}
+                    style={{ background: '#181C26', border: '1px solid #2A2F3E', color: '#CBD5E1' }}
                   >
-                    {activaTexto}
+                    {/* Markdown (títulos, listas, tablas) como en la plantilla PV */}
+                    <ContenidoMarkdown texto={normalizarContenido(activaTexto)} />
                   </div>
                 )}
 
