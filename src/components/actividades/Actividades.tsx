@@ -3,6 +3,7 @@
 // react y katex, estilos en CSS module y colores de la escuela por las variables --color-* de «Personalizar mi página».
 // Nada se envía al servidor: el avance vive solo en el navegador del alumno (almacen.ts).
 // FUENTE: C:\clientes-MEV\actividades\sistema\web\src\actividades (vista previa y PDF del sistema de actividades).
+// EDVEX: el avance se guarda por alumno (prop `alumno`, llave «<alumno>/<unidad>»): varias cuentas comparten equipo.
 // Copiado tal cual salvo un parámetro sin usar que el lint de la plantilla rechaza; corregir.ts, tipos.ts, almacen.ts y
 // TextoRico.tsx son copia exacta. El CSS cambia SOLO los colores de resultado (bien/mal/modelo/parcial): fondos derivados
 // de --color-superficie y textos mezclados con --color-texto, para que se lean también en paletas oscuras. Lo propio de la plantilla vive en datos.ts, Descargas.tsx y SeccionActividades.tsx.
@@ -32,6 +33,8 @@ export interface PropsActividades {
   pdfUrl?: string;
   /** false = no recordar respuestas en el navegador (vista previa). */
   recordar?: boolean;
+  /** EDVEX: id del alumno en sesión; el avance se guarda por alumno (cuentas compartidas en un mismo equipo). */
+  alumno?: string;
 }
 
 function nivel(bien: number, total: number) {
@@ -47,8 +50,10 @@ function suave(): ScrollBehavior {
   }
 }
 
-export default function Actividades({ datos, pdfUrl, recordar = true }: PropsActividades) {
+export default function Actividades({ datos, pdfUrl, recordar = true, alumno }: PropsActividades) {
   const uid = datos.unidad.id;
+  // EDVEX: la llave del avance en localStorage lleva al alumno («actividades:v1:<alumno>/<unidad>»).
+  const llave = alumno ? `${alumno}/${uid}` : uid;
   const [estado, setEstado] = useState<EstadoUnidad>(VACIO);
   const [activo, setActivo] = useState<string>("");
   const listo = useRef(false);
@@ -56,13 +61,15 @@ export default function Actividades({ datos, pdfUrl, recordar = true }: PropsAct
   const raizRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    setEstado(recordar ? cargar(uid) : VACIO);
+    setEstado(recordar ? cargar(llave) : VACIO);
+    // Avance de antes de separarlo por alumno: se descarta (no se sabe de quién era).
+    if (recordar && alumno) borrar(uid);
     listo.current = true;
-  }, [uid, recordar]);
+  }, [llave, uid, alumno, recordar]);
 
   useEffect(() => {
-    if (listo.current && recordar) guardar(uid, estado);
-  }, [estado, uid, recordar]);
+    if (listo.current && recordar) guardar(llave, estado);
+  }, [estado, llave, recordar]);
 
   // La tira de avance marca la actividad que se ve y la centra (en el celular no caben todos los chips)
   useEffect(() => {
@@ -102,7 +109,7 @@ export default function Actividades({ datos, pdfUrl, recordar = true }: PropsAct
   const hayAvance = Object.keys(estado.act).length > 0 || Object.keys(estado.auto.r).length > 0;
 
   function reiniciarTodo() {
-    if (recordar) borrar(uid);
+    if (recordar) borrar(llave);
     setEstado(VACIO);
   }
 

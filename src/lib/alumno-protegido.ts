@@ -16,7 +16,15 @@
  * protección funcione aunque no se configure la env en el hosting. La env
  * `ALUMNOS_PROTEGIDOS` (si existe) SE SUMA a esta lista, no la reemplaza.
  */
-const IDS_DEFAULT = ['50e1f467-766b-401d-8473-70e014873ec0']
+const IDS_DEFAULT = [
+  '50e1f467-766b-401d-8473-70e014873ec0', // serranomas@outlook.com — Preparatoria
+  // Cuentas por área que los vendedores muestran en videollamada (21-oct-2026):
+  '0e691441-d632-41a3-a7c6-0ce954356b46', // sofia.ramirez — Secundaria
+  '9ea910aa-a3be-47cc-b7b0-8619cfc13483', // emiliano.vargas — Cursos de ingreso
+  'ff53509a-0dec-4ef8-946a-728aea32a39f', // andrea.morales — Administración
+  'cc2fa082-b767-4a68-8970-fff6e2bd32a1', // rodrigo.castaneda — Derecho
+  '02982a8d-f3e8-42d1-ac5f-d3e1bfc6032d', // fernanda.ortiz — Psicología
+]
 
 const IDS_ENV = (process.env.ALUMNOS_PROTEGIDOS ?? '')
   .split(',')
