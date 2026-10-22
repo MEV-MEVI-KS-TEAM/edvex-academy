@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { firmarVideoUrl } from '@/lib/video/bunny-firma'
 import { alumnoDeArea, esMateriaDelAlumno } from '@/lib/area/acceso'
+import { semanasLibres } from '@/lib/alumno-protegido'
 
 // ─── GET /api/alumno/plan/materia/[id] — materia de un programa por área ─────
 // Mismo contrato que /api/alumno/materia/[id] (Preparatoria) para que la vista
@@ -88,6 +89,8 @@ export async function GET(
       ...m,
       semanas,
       evaluaciones: evaluacionesConIntentos,
+      // Cuentas protegidas: las semanas no se encadenan por avance.
+      semanas_libres: semanasLibres(user.id),
     })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })

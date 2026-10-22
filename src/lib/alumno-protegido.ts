@@ -42,3 +42,18 @@ export function esAlumnoProtegido(userId: string | null | undefined): boolean {
 
 /** Mensaje amable que devuelven las APIs cuando la cuenta está protegida. */
 export const MENSAJE_ALUMNO_PROTEGIDO = 'Esta acción no está disponible en esta cuenta.'
+
+/**
+ * Meses de contenido con acceso. Las cuentas protegidas (las que los vendedores
+ * muestran) ven TODO su programa, sin depender de pagos ni de datos guardados
+ * (la limpieza nocturna borra su avance): para ellas no hay tope. Los demás
+ * alumnos: exactamente sus `meses_desbloqueados`, como siempre.
+ */
+export function mesesConAcceso(userId: string | null | undefined, mesesDesbloqueados: number): number {
+  return esAlumnoProtegido(userId) ? Number.MAX_SAFE_INTEGER : mesesDesbloqueados
+}
+
+/** ¿Las semanas de cada materia se abren libres (sin completar la anterior)? Solo cuentas protegidas. */
+export function semanasLibres(userId: string | null | undefined): boolean {
+  return esAlumnoProtegido(userId)
+}

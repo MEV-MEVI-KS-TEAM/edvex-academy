@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { alumnoPuedeAccederEvaluacion } from '@/lib/alumno-evaluacion-access'
+import { mesesConAcceso } from '@/lib/alumno-protegido'
 
 export async function GET(
   _request: NextRequest,
@@ -59,7 +60,7 @@ export async function GET(
     }
     const codigo = m?.codigo ?? ''
     const numeroMes = m?.meses_contenido?.numero ?? 0
-    if (!alumnoPuedeAccederEvaluacion(codigo, numeroMes, alumno.meses_desbloqueados)) {
+    if (!alumnoPuedeAccederEvaluacion(codigo, numeroMes, mesesConAcceso(user.id, alumno.meses_desbloqueados))) {
       return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
     }
 

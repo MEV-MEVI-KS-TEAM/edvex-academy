@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { mesesConAcceso } from '@/lib/alumno-protegido'
 
 export async function GET() {
   try {
@@ -20,18 +21,21 @@ export async function GET() {
       inscripcion_pagada: boolean
     }
 
+    // Cuentas protegidas: todo el programa abierto (lib/alumno-protegido).
+    const meses = mesesConAcceso(user.id, alumno.meses_desbloqueados)
+
     // Siempre mostrar todos los meses con candado/abierto.
     // TUT101 siempre desbloqueada. Demás materias según meses_desbloqueados.
     // Ambos planes (Estándar 6 meses y Express 3 meses) cubren los mismos
     // 6 meses de contenido — la diferencia es la velocidad de desbloqueo.
-    const { data: meses, error: mesesError } = await supabase
+    const { data: mesesData, error: mesesError } = await supabase
       .from('meses_contenido')
       .select('*, materias(id, codigo, nombre, nombre_en, color_hex, descripcion, descripcion_en)')
       .order('numero')
 
     if (mesesError) return NextResponse.json({ error: mesesError.message }, { status: 500 })
 
-    const result = (meses ?? []).map((mes: unknown) => {
+    const result = (mesesData ?? []).map((mes: unknown) => {
       const m = mes as {
         id: string
         numero: number
@@ -44,13 +48,13 @@ export async function GET() {
       // Demás materias: desbloqueadas si el mes <= meses_desbloqueados.
       const materiasConAcceso = m.materias.map(mat => ({
         ...mat,
-        desbloqueada: mat.codigo.startsWith('TUT') || m.numero <= alumno.meses_desbloqueados,
+        desbloqueada: mat.codigo.startsWith('TUT') || m.numero <= meses,
       }))
 
       return {
         ...m,
         materias: materiasConAcceso,
-        desbloqueado: m.numero <= alumno.meses_desbloqueados,
+        desbloqueado: m.numero <= meses,
       }
     })
 

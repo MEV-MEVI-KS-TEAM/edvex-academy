@@ -49,6 +49,8 @@ interface Materia {
   bibliografia_en?: BibItem[]
   semanas: Semana[]
   evaluaciones: Evaluacion[]
+  /** Cuentas protegidas: todas las semanas abiertas, sin completar la anterior. */
+  semanas_libres?: boolean
   /** Cuaderno de actividades de toda la materia (en licenciatura, el de la carrera). */
   cuaderno_pdf_url?: string | null
   numero_mes?: number | null
@@ -273,6 +275,7 @@ export default function MateriaAreaPage() {
                     onSemanaClick={setSemanaSeleccionada}
                     lang={lang}
                     esTutorial={materia.codigo?.toUpperCase().startsWith('TUT')}
+                    libre={materia.semanas_libres === true}
                   />
                 </div>
               </div>

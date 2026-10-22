@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { firmarVideoUrl } from '@/lib/video/bunny-firma'
+import { mesesConAcceso, semanasLibres } from '@/lib/alumno-protegido'
 
 export async function GET(
   _request: NextRequest,
@@ -48,7 +49,7 @@ export async function GET(
 
     // TUT* (Tutoría) siempre accesible para cualquier alumno activo.
     // Demás materias: solo si el mes está desbloqueado.
-    if (!esTutoria && numeroMes > alumno.meses_desbloqueados) {
+    if (!esTutoria && numeroMes > mesesConAcceso(user.id, alumno.meses_desbloqueados)) {
       return NextResponse.json({ error: 'No tienes acceso a esta materia' }, { status: 403 })
     }
 
@@ -129,6 +130,8 @@ export async function GET(
       ...m,
       semanas,
       evaluaciones: evaluacionesConIntentos,
+      // Cuentas protegidas: las semanas no se encadenan por avance.
+      semanas_libres: semanasLibres(user.id),
     })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
