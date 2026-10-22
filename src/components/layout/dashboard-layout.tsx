@@ -17,6 +17,8 @@ interface DashboardLayoutProps {
   showFooter?: boolean
   /** Alumno de un área: el menú solo muestra Mis cursos, documentos y perfil. */
   soloCursos?: boolean
+  /** Área con plan de materias (secundaria, licenciatura): menú con «Mis materias» → /alumno/plan. */
+  conPlan?: boolean
 }
 
 export function DashboardLayout({
@@ -27,6 +29,7 @@ export function DashboardLayout({
   pageTitle,
   showFooter = false,
   soloCursos = false,
+  conPlan = false,
 }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { t } = useLanguage()
@@ -44,6 +47,7 @@ export function DashboardLayout({
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         soloCursos={soloCursos}
+        conPlan={conPlan}
       />
 
       <div className="flex flex-col flex-1 min-w-0 md:ml-[260px]">

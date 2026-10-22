@@ -1,6 +1,7 @@
 /** Tipos del visor del alumno (respuestas de las API /api/alumno/cursos).
  *  Los campos `_en` viajan al cliente para resolverse con loc() según el idioma activo. */
 import type { CursoTipo } from './cursos'
+import type { ActividadesUnidad } from '@/components/actividades/tipos'
 
 export interface CursoCatalogoItem {
   id: string
@@ -26,6 +27,10 @@ export interface LeccionAlumno {
   tieneMaterial: boolean
   orden: number
   completada: boolean
+  /** Actividades interactivas «actividades/1» ya validadas; null = no hay. */
+  actividades?: ActividadesUnidad | null
+  /** PDF de las actividades de la lección (https); null = no hay. */
+  actividades_pdf_url?: string | null
 }
 
 export interface ModuloAlumno {
@@ -46,6 +51,8 @@ export interface CursoDetalleAlumno {
     tipo: CursoTipo
     estado: string
     portadaUrl: string | null
+    /** Cuaderno de actividades de todo el curso (https); null = no hay. */
+    cuaderno_pdf_url?: string | null
   }
   modoPreview: boolean
   modulos: ModuloAlumno[]

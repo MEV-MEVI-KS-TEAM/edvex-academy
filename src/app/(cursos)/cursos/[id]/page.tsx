@@ -48,6 +48,12 @@ export default function VisorCursoPage() {
       })
       .then((json: CursoDetalleAlumno | null) => {
         if (!json || cancelled) return
+        // El alumno estudia en el aula del portal (/alumno/curso/[id], port de
+        // la plantilla); este visor queda para la vista previa del admin.
+        if (!json.modoPreview) {
+          router.replace(`/alumno/curso/${cursoId}`)
+          return
+        }
         setDetalle(json)
         setActivaId(json.primeraLeccionPendienteId)
         // Expandir el módulo que contiene la lección activa

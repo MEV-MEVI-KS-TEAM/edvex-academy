@@ -1,0 +1,1228 @@
+/* Actividades — mobile-first. Colores SOLO de las variables de la escuela (--color-*), con respaldo neutro.
+   --color-acento-profundo = acento usable como FONDO con texto encima; --color-acento-texto = acento usable como LETRA. */
+
+.raiz {
+  --a: var(--color-acento, #2563eb);
+  /* El acento como LETRA se acerca un 15 % al color de texto: --color-acento-texto cumple AA sobre la superficie, pero
+     aquí también va sobre los tintes del acento (--tinte, --tinte-fuerte) y ahí quedaba en 4.1–4.5. */
+  --a-txt: color-mix(in srgb, var(--color-acento-texto, #1d4ed8) 85%, var(--tx));
+  --a-fondo: var(--color-acento-profundo, #1d4ed8);
+  /* Letra sobre --a-fondo: BLANCO. --color-acento-profundo es el acento oscurecido hasta que el blanco se lea encima
+     (7:1, layout.tsx); --color-texto-sobre-acento es para el acento CRUDO y en una paleta de acento claro («Dorado
+     sobre negro») es casi negro: sobre el dorado oscurecido quedaba en 2.6 («Revisar», «Reto final»). */
+  --sobre-a: #ffffff;
+  --sup: var(--color-superficie, #ffffff);
+  --fondo: var(--color-fondo, #f8fafc);
+  --borde: var(--color-borde, #e5e7eb);
+  --tx: var(--color-texto, #0f172a);
+  --tx2: var(--color-texto-secundario, #525252);
+  --tinte: color-mix(in srgb, var(--a) 7%, var(--sup));
+  --tinte-fuerte: color-mix(in srgb, var(--a) 14%, var(--sup));
+  /* Resultados. Los FONDOS salen de la superficie de la escuela y los TEXTOS se mezclan con su color de texto: así
+     se leen igual en la paleta clara de fábrica que en una oscura («Dorado sobre negro»), donde un fondo pastel fijo
+     con var(--tx) crema encima quedaba ilegible. --bien / --mal sólidos quedan para bordes y para la letra con #fff. */
+  --bien: #15803d;
+  --mal: #b91c1c;
+  --bien-fondo: color-mix(in srgb, #22c55e 10%, var(--sup));
+  --mal-fondo: color-mix(in srgb, #ef4444 9%, var(--sup));
+  --modelo-fondo: color-mix(in srgb, #f59e0b 12%, var(--sup));
+  --bien-txt: color-mix(in srgb, #15803d 55%, var(--tx));
+  --mal-txt: color-mix(in srgb, #b91c1c 55%, var(--tx));
+  --parte-txt: color-mix(in srgb, #b45309 55%, var(--tx));
+  --modelo: color-mix(in srgb, #78350f 50%, var(--tx));
+  --r: 14px;
+
+  color: var(--tx);
+  font-size: 16px;
+  line-height: 1.55;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  font-variant-numeric: lining-nums;
+  -webkit-text-size-adjust: 100%;
+  overflow-wrap: anywhere;
+}
+
+.raiz *,
+.raiz *::before,
+.raiz *::after {
+  box-sizing: border-box;
+}
+
+.raiz :focus-visible {
+  outline: 3px solid var(--a-fondo);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+.oculto {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* ── Cabecera ── */
+.cabecera {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.rotulo {
+  margin: 0;
+  font-size: 14px;
+  color: var(--tx2);
+  font-weight: 500;
+}
+.titulo {
+  margin: 0 0 6px;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  overflow-wrap: break-word;
+}
+
+/* ── Tira de avance ── */
+.tira {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 -16px;
+  padding: 8px 16px;
+  background: color-mix(in srgb, var(--fondo) 92%, transparent);
+  backdrop-filter: blur(6px);
+  overflow-x: auto;
+  scrollbar-width: none;
+  /* degradado en el borde derecho: avisa que la tira se desliza */
+  -webkit-mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(90deg, #000 0, #000 calc(100% - 36px), transparent);
+}
+.tira ol::after {
+  content: "";
+  flex: none;
+  width: 28px;
+}
+.tira::-webkit-scrollbar {
+  display: none;
+}
+.tira ol {
+  display: flex;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  width: max-content;
+}
+.paso {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 6px 14px 6px 6px;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--sup);
+  color: var(--tx);
+  text-decoration: none;
+  font-size: 14px;
+  white-space: nowrap;
+}
+.pasoNum {
+  display: inline-grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--tinte-fuerte);
+  color: var(--a-txt);
+  font-weight: 700;
+  font-size: 14px;
+}
+.paso[data-estado="hecho"] {
+  border-color: var(--a);
+}
+.paso[aria-current="step"] {
+  border-color: var(--a-fondo);
+  box-shadow: inset 0 0 0 1.5px var(--a-fondo);
+  font-weight: 600;
+}
+.pasoNum .icono {
+  width: 16px;
+  height: 16px;
+}
+.paso[data-estado="hecho"] .pasoNum {
+  background: var(--a-fondo);
+  color: var(--sobre-a);
+}
+.pasoNota {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.pasoNota[data-nivel="todo"] {
+  color: var(--bien-txt);
+}
+.pasoNota[data-nivel="parte"] {
+  color: var(--parte-txt);
+}
+.pasoNota[data-nivel="nada"] {
+  color: var(--mal-txt);
+}
+
+/* ── Lo esencial ── */
+.esencial {
+  background: var(--tinte);
+  border-radius: var(--r);
+  border-left: 5px solid var(--a);
+}
+.esencialCab,
+.ejemploCab {
+  width: 100%;
+  min-height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  background: none;
+  border: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+.esencialTitulo {
+  font-size: 19px;
+  font-weight: 700;
+  margin-right: auto;
+}
+.esencialAyuda {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--a-txt);
+}
+.chevron {
+  width: 12px;
+  height: 12px;
+  border-right: 2.5px solid currentColor;
+  border-bottom: 2.5px solid currentColor;
+  transform: rotate(45deg) translateY(-3px);
+  transition: transform 0.18s ease;
+  flex: none;
+}
+.chevron[data-abierto="true"] {
+  transform: rotate(225deg) translateY(-3px);
+}
+.esencialCuerpo {
+  padding: 0 16px 16px;
+}
+.esencialIntro {
+  margin: 0 0 12px;
+}
+.puntos {
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.punto {
+  background: var(--sup);
+  border-radius: 10px;
+  padding: 0 12px;
+}
+.punto summary {
+  font-weight: 700;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  list-style: none;
+}
+.punto summary::-webkit-details-marker {
+  display: none;
+}
+.punto summary::after {
+  content: "+";
+  margin-left: auto;
+  padding-left: 12px;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--a-txt);
+}
+.punto[open] summary::after {
+  content: "−";
+}
+.puntoTxt {
+  margin: 0 0 6px;
+}
+.formulas {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.formulas li {
+  background: var(--sup);
+  border: 1px dashed color-mix(in srgb, var(--a) 45%, var(--borde));
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.formulas li :global(.katex) {
+  font-size: 1em;
+}
+.recuerda {
+  margin: 12px 0 0;
+}
+
+/* ── Tarjeta de actividad ── */
+.actividad,
+.auto {
+  background: var(--sup);
+  border: 1px solid var(--borde);
+  border-radius: var(--r);
+  scroll-margin-top: 72px;
+  /* clip y no hidden: hidden crea un contenedor de scroll y rompe el banco de palabras sticky */
+  overflow: clip;
+}
+.actividad[data-reto="si"] {
+  border: 2px solid var(--a);
+}
+.actCab {
+  padding: 18px 16px 4px;
+}
+.actMeta {
+  margin: 0 0 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  align-items: center;
+  font-size: 14px;
+  color: var(--tx2);
+  font-weight: 500;
+}
+.actTipo {
+  color: var(--a-txt);
+  font-weight: 600;
+}
+.insigniaReto {
+  background: var(--a-fondo);
+  color: var(--sobre-a);
+  font-weight: 700;
+  border-radius: 999px;
+  padding: 2px 10px;
+}
+.actTitulo {
+  margin: 0 0 6px;
+  font-size: 20px;
+  line-height: 1.25;
+  font-weight: 700;
+}
+.instrucciones {
+  margin: 0;
+  color: var(--tx2);
+}
+.actCuerpo {
+  padding: 14px 16px 4px;
+}
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.numReactivo {
+  font-weight: 700;
+  margin-right: 6px;
+  color: var(--a-txt);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Opción múltiple / V-F ── */
+.reactivo {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  min-width: 0;
+}
+.enunciado {
+  display: block;
+  padding: 0;
+  margin-bottom: 10px;
+  font-weight: 500;
+  font-size: 17px;
+  line-height: 1.6;
+}
+.opciones {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.iconoEnTexto {
+  display: inline-flex;
+  vertical-align: -0.15em;
+}
+.iconoEnTexto svg {
+  width: 1.05em;
+  height: 1.05em;
+}
+.opcion,
+.opcionVF {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px 10px 10px;
+  border: 1.5px solid var(--borde);
+  border-radius: 12px;
+  background: var(--sup);
+  cursor: pointer;
+  transition: border-color 0.12s ease, background-color 0.12s ease;
+}
+.radio {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+.opcion:has(.radio:focus-visible),
+.opcionVF:has(.radio:focus-visible) {
+  outline: 3px solid var(--a-fondo);
+  outline-offset: 2px;
+}
+.letra {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  background: var(--fondo);
+  border: 1.5px solid var(--borde);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--tx2);
+}
+.opcionTxt {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.vfTxt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.opcion[data-marcada="true"],
+.opcionVF[data-marcada="true"] {
+  border-color: var(--a);
+  background: var(--tinte);
+}
+.opcion[data-marcada="true"] .letra {
+  background: var(--a-fondo);
+  border-color: var(--a-fondo);
+  color: var(--sobre-a);
+}
+.opcion[data-marca="correcta"],
+.opcionVF[data-marca="correcta"] {
+  border-color: var(--bien);
+  background: var(--bien-fondo);
+}
+.opcion[data-marca="correcta"] .letra {
+  background: var(--bien);
+  border-color: var(--bien);
+  color: #fff;
+}
+.opcion[data-marca="incorrecta"],
+.opcionVF[data-marca="incorrecta"] {
+  border-color: var(--mal);
+  background: var(--mal-fondo);
+}
+.opcion[data-marca="incorrecta"] .letra {
+  background: var(--mal);
+  border-color: var(--mal);
+  color: #fff;
+}
+.opcion:has(.radio:disabled),
+.opcionVF:has(.radio:disabled) {
+  cursor: default;
+}
+.vf {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+.opcionVF {
+  justify-content: center;
+  font-weight: 600;
+}
+
+/* ── Veredicto ── */
+.veredicto {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border-left: 4px solid var(--bien);
+  background: var(--bien-fondo);
+  font-size: 15px;
+}
+.veredicto[data-ok="false"] {
+  border-left-color: var(--mal);
+  background: var(--mal-fondo);
+}
+.veredictoCab {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 6px;
+}
+.veredictoCorrecta {
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+.veredictoNota {
+  margin: 4px 0 0;
+  font-weight: 600;
+  color: var(--tx);
+}
+/* una fórmula nunca se parte en dos renglones (si no cabe, el gate de pantalla lo reprueba); inline-block con aire para
+   que las fracciones de dos renglones vecinos no se encimen */
+.raiz :global(.katex) {
+  font-size: 1.08em;
+  white-space: nowrap;
+  display: inline-block;
+  padding: 0.12em 0;
+  vertical-align: baseline;
+}
+.marcaOp {
+  flex: none;
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.marcaOp[data-ok="true"] {
+  color: var(--bien-txt);
+}
+.marcaOp[data-ok="false"] {
+  color: var(--mal-txt);
+}
+.marcaVF {
+  display: inline-flex;
+}
+.marcaVF[data-ok="true"] {
+  color: var(--bien-txt);
+}
+.marcaVF[data-ok="false"] {
+  color: var(--mal-txt);
+}
+.eleccion {
+  margin: 0;
+  font-size: 15px;
+  color: var(--tx2);
+}
+.eleccionBien {
+  margin: 0;
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--bien-txt);
+}
+.eleccionBien span {
+  color: var(--tx);
+}
+.lugar {
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.ayudaArriba {
+  margin: 0 0 14px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+.aviso {
+  margin: 10px 0 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--modelo-fondo);
+  color: var(--modelo);
+  font-weight: 600;
+}
+.califLinea {
+  margin: 0;
+  font-size: 17px;
+}
+.veredicto[data-ok="true"] .veredictoCab {
+  color: var(--bien-txt);
+}
+.veredicto[data-ok="false"] .veredictoCab {
+  color: var(--mal-txt);
+}
+.veredictoCab span {
+  color: var(--tx);
+}
+.veredictoTxt {
+  margin: 6px 0 0;
+  color: var(--tx);
+}
+.icono {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+/* ── Relacionar ── */
+.par {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.parIzq {
+  font-weight: 600;
+  font-size: 17px;
+}
+.select,
+.hueco,
+.inputNum,
+.textarea {
+  font: inherit;
+  font-size: 16px; /* 16px evita el zoom automático de iOS */
+  color: var(--tx);
+  background: var(--sup);
+  border: 1.5px solid color-mix(in srgb, var(--tx2) 55%, var(--borde));
+  border-radius: 10px;
+}
+.select:disabled {
+  color: var(--tx);
+  opacity: 1;
+}
+.select {
+  width: 100%;
+  min-height: 48px;
+  padding: 10px 40px 10px 12px;
+  appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, currentColor 50%), linear-gradient(135deg, currentColor 50%, transparent 50%);
+  background-position: calc(100% - 20px) 50%, calc(100% - 14px) 50%;
+  background-size: 6px 6px;
+  background-repeat: no-repeat;
+  text-overflow: ellipsis;
+}
+.par[data-resultado="correcto"] .select,
+.ejercicio[data-resultado="correcto"] .inputNum {
+  border-color: var(--bien);
+}
+.par[data-resultado="incorrecto"] .select,
+.ejercicio[data-resultado="incorrecto"] .inputNum {
+  border-color: var(--mal);
+}
+
+/* ── Completar: la frase se lee de corrido (con el hueco a la vista) y el campo va abajo, a todo lo ancho ── */
+.bancoTit {
+  margin: 0 0 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--tx2);
+}
+.banco {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 12px;
+  background: var(--tinte);
+}
+.chip {
+  min-height: 44px;
+  min-width: 44px; /* palabras de una letra o un dígito («D», «8») también miden 44 px */
+  padding: 8px 14px;
+  font: inherit;
+  font-size: 15px;
+  border-radius: 999px;
+  border: 1.5px solid var(--borde);
+  background: var(--sup);
+  color: var(--tx);
+  cursor: pointer;
+}
+.completar {
+  min-width: 0;
+}
+.completarTxt {
+  margin: 0 0 6px;
+  font-size: 17px;
+  line-height: 1.8;
+}
+.completarTxt[data-revisada="si"] {
+  line-height: 1.7;
+}
+.sinCorte {
+  white-space: nowrap;
+}
+/* con 2+ espacios en una frase, dos campos de 44 px pueden quedar en renglones seguidos: interlineado que no los enciman */
+.completarTxt[data-varios="si"] {
+  line-height: 2.8;
+}
+.huecoVista {
+  display: inline-block;
+  min-width: 4.5em;
+  padding: 0 4px;
+  margin: 0 0 0 2px; /* sin margen a la derecha: el punto final va pegado («célula.») */
+  border-bottom: 2px solid var(--tx2);
+  font-weight: 700;
+  color: var(--a-txt);
+  text-align: center;
+  line-height: 1.35;
+}
+.huecoVista[data-resultado="correcto"] {
+  color: var(--bien-txt);
+  border-bottom-color: var(--bien);
+  background: var(--bien-fondo);
+}
+.huecoVista[data-resultado="incorrecto"] {
+  color: var(--mal-txt);
+  border-bottom-color: var(--mal);
+  background: var(--mal-fondo);
+  text-decoration: line-through;
+}
+/* el banco de palabras se queda arriba, a la vista, mientras se responde la actividad (el teclado tapa la parte de abajo) */
+.bancoFijo {
+  position: sticky;
+  top: 62px;
+  z-index: 1;
+  margin: 0 0 14px;
+  padding: 6px 0;
+  background: var(--sup);
+}
+/* una sola fila deslizable (~56 px): fija arriba sin tapar la frase que se está llenando */
+.bancoFijo .banco {
+  margin-top: 0;
+  padding: 6px;
+  gap: 6px;
+}
+.bancoFijo .banco::-webkit-scrollbar {
+  display: none;
+}
+.bancoFijo .chip {
+  flex: none;
+}
+.cajaAbierta + .cajaAbierta {
+  margin-top: 4px;
+}
+.huecoVista[data-activo="si"] {
+  border-bottom-color: var(--a-fondo);
+  background: var(--tinte);
+}
+.huecoVista sup {
+  font-size: 11px;
+  color: var(--tx2);
+  margin-right: 2px;
+}
+.camposHueco {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.hueco {
+  width: 9.5em;
+  max-width: 62vw;
+  height: 44px;
+  /* texto pegado abajo + baseline: la raya queda en el renglón, a la altura del punto final */
+  padding: 16px 6px 0;
+  /* margen negativo: el objetivo táctil mide 44 px sin abrir el interlineado de la frase */
+  margin: -8px 0 -8px 2px;
+  vertical-align: baseline;
+  border: 0;
+  border-bottom: 2px solid var(--tx2);
+  border-radius: 0;
+  background: transparent;
+  font-weight: 700;
+  color: var(--a-txt);
+}
+.hueco {
+  scroll-margin-top: 150px;
+}
+.hueco::placeholder {
+  color: var(--tx2);
+  font-weight: 500;
+  font-size: 14px;
+}
+.hueco[data-activo="si"],
+.hueco:focus {
+  border-bottom: 3px solid var(--a-fondo);
+}
+.hueco[data-resultado="correcto"] {
+  border-color: var(--bien);
+  background: var(--bien-fondo);
+}
+.hueco[data-resultado="incorrecto"] {
+  border-color: var(--mal);
+  background: var(--mal-fondo);
+}
+/* ── Ordenar ── */
+.ordenar {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.ordenItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 60px;
+  padding: 8px 8px 8px 10px;
+  border: 1.5px solid var(--borde);
+  border-radius: 12px;
+  background: var(--sup);
+  transition: background-color 0.4s ease;
+}
+.ordenItem[data-movido="true"] {
+  background: var(--tinte);
+}
+.ordenItem[data-resultado="correcto"] {
+  border-color: var(--bien);
+  background: var(--bien-fondo);
+}
+.ordenItem[data-resultado="incorrecto"] {
+  border-color: var(--mal);
+  background: var(--mal-fondo);
+}
+.ordenPos {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--tinte-fuerte);
+  color: var(--a-txt);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+.ordenTxt {
+  flex: 1;
+  min-width: 0;
+}
+.ordenBotones {
+  flex: none;
+  display: flex;
+  gap: 6px;
+}
+.ordenMarca {
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 44px;
+}
+.ordenMarca[data-ok="true"] {
+  color: var(--bien-txt);
+}
+.ordenMarca[data-ok="false"] {
+  color: var(--mal-txt);
+}
+.ordenCorrecto {
+  margin: 6px 0 0;
+  padding-left: 22px;
+  color: var(--tx);
+}
+.botonIcono {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1.5px solid var(--borde);
+  background: var(--fondo);
+  color: var(--tx);
+  cursor: pointer;
+}
+.botonIcono:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* ── Numérico ── */
+.ejemplo {
+  border-radius: 12px;
+  background: var(--tinte);
+  margin-bottom: 20px;
+}
+.ejemploCab {
+  font-weight: 700;
+  font-size: 17px;
+}
+.ejemploCuerpo {
+  padding: 0 16px 14px;
+}
+.ejemploCuerpo > p {
+  margin: 0 0 8px;
+}
+.pasos {
+  margin: 8px 0;
+  padding-left: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.pasos li {
+  padding-left: 2px;
+}
+.resultado {
+  margin: 8px 0 0;
+  padding: 8px 12px;
+  background: var(--sup);
+  border-radius: 8px;
+}
+.ejercicio {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.campoNum {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.inputNum {
+  width: 100%;
+  max-width: 240px;
+  min-height: 48px;
+  padding: 10px 12px;
+  font-variant-numeric: tabular-nums;
+}
+.unidadNum {
+  color: var(--tx2);
+  font-weight: 600;
+}
+.ayuda {
+  margin: 14px 0 0;
+  font-size: 14px;
+  color: var(--tx2);
+}
+
+/* ── Respuesta abierta ── */
+.consigna {
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+.preguntas {
+  margin: 14px 0 0;
+  padding-left: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+}
+.etiquetaTa {
+  display: block;
+  margin: 16px 0 6px;
+  font-weight: 600;
+}
+.textarea {
+  width: 100%;
+  min-height: 150px;
+  padding: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+.accionesAbierta {
+  display: flex;
+  flex-direction: column;
+  margin: 16px 0;
+}
+.accionesAbierta .botonPrimario,
+.accionesAbierta .botonSecundario {
+  width: 100%;
+}
+.modeloParte {
+  margin: 8px 0 0;
+}
+.modeloParte strong {
+  color: var(--modelo);
+}
+.fallaste {
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  color: var(--tx2);
+}
+.pastilla {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1.5px solid var(--a);
+  color: var(--a-txt);
+  font-weight: 600;
+  text-decoration: none;
+}
+.resumen {
+  margin: -2px 0 4px;
+  font-size: 15px;
+  color: var(--tx2);
+}
+.cabecera .botonSecundario {
+  min-height: 44px;
+  padding: 8px 14px;
+  font-size: 15px;
+}
+.modelo {
+  margin: 0 0 16px;
+  padding: 14px;
+  border-radius: 12px;
+  background: var(--modelo-fondo);
+  border-left: 4px solid #d97706;
+}
+.modeloTit {
+  margin: 0 0 6px;
+  font-weight: 700;
+  color: var(--modelo);
+}
+.modeloTxt {
+  margin-bottom: 14px;
+}
+.criterios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.criterio {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 4px;
+  cursor: pointer;
+}
+.criterio input {
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin: 1px 0 0;
+  accent-color: var(--a-fondo);
+}
+
+/* ── Acciones y puntaje ── */
+.acciones {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.actCuerpo + .acciones {
+  padding-top: 20px;
+}
+.botonPrimario,
+.botonSecundario {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 50px;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font: inherit;
+  font-weight: 700;
+  font-size: 17px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.botonPrimario {
+  width: 100%;
+  background: var(--a-fondo);
+  color: var(--sobre-a);
+  border: 0;
+}
+.botonPrimario:active {
+  transform: translateY(1px);
+}
+.botonSecundario {
+  background: var(--sup);
+  color: var(--a-txt);
+  border: 1.5px solid currentColor;
+}
+.acciones .botonSecundario {
+  width: 100%;
+}
+.botonTexto {
+  align-self: flex-start;
+  min-height: 44px;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--a-txt);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.explicacion {
+  margin: 0;
+  padding: 10px 12px;
+  background: var(--fondo);
+  border-radius: 10px;
+}
+.puntaje {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 14px;
+}
+.puntajeCifra {
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--a-txt);
+}
+.puntajeDe {
+  font-size: 0.55em;
+  font-weight: 700;
+  color: var(--tx2);
+}
+.puntajeTxt {
+  font-weight: 600;
+}
+.barra {
+  grid-column: 1 / -1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--fondo);
+  border: 1px solid var(--borde);
+  overflow: hidden;
+}
+.barra span {
+  display: block;
+  height: 100%;
+  background: var(--a);
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+/* ── Autoevaluación ── */
+.auto {
+  border-top: 6px solid var(--a);
+}
+.calif {
+  margin: 14px 16px 0;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  border-radius: 12px;
+  background: var(--tinte);
+}
+.anillo {
+  width: 92px;
+  height: 92px;
+  flex: none;
+  transform: rotate(-90deg);
+}
+.anilloFondo {
+  fill: none;
+  stroke: var(--sup);
+  stroke-width: 12;
+}
+.anilloValor {
+  fill: none;
+  stroke: var(--a);
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition: stroke-dasharray 0.8s ease;
+}
+.califTxt {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+.califCifra {
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  color: var(--a-txt);
+}
+
+/* ── Pie ── */
+.pie {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 14px;
+  color: var(--tx2);
+}
+.pie p {
+  margin: 0;
+}
+
+@media (min-width: 640px) {
+  .titulo {
+    font-size: 30px;
+  }
+  .actCab,
+  .actCuerpo,
+  .acciones {
+    padding-left: 24px;
+    padding-right: 24px;
+  }
+  .acciones .botonSecundario,
+  .botonPrimario {
+    width: auto;
+    align-self: flex-start;
+    min-width: 200px;
+  }
+  .tira {
+    margin: 0;
+    padding: 8px 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .raiz * {
+    transition: none !important;
+  }
+}
+
+/* aviso neutro (no es error): p. ej. cómo leer las marcas de «ordenar» */
+.nota {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--fondo);
+  border-left: 4px solid var(--borde);
+  font-size: 15px;
+}
+

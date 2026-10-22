@@ -7,6 +7,19 @@
   --foreground: #171717;
 }
 
+/* Paleta de EDVEX para las actividades interactivas (src/components/actividades):
+   el componente solo lee estas --color-*; nada más en la app las usa. */
+:root {
+  --color-fondo: #0B0D11;
+  --color-superficie: #181C26;
+  --color-borde: #2A2F3E;
+  --color-texto: #F1F5F9;
+  --color-texto-secundario: #94A3B8;
+  --color-acento: #5B6CFF;
+  --color-acento-profundo: #4352E8;
+  --color-acento-texto: #8D9AFF;
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
     --background: #0a0a0a;
