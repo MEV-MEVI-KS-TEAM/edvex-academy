@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { alumnoDeArea, puedeVerMateria, type AlumnoArea } from '@/lib/area/acceso'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 /**
  * Quiz semanal de un programa por área. Mismo contrato que
@@ -86,6 +87,10 @@ export async function POST(
 
     const acceso = await verificarAccesoSemana(supabase, semanaId, alumno)
     if (!acceso.ok) return NextResponse.json({ error: acceso.error }, { status: 403 })
+
+    // Cuenta compartida (lib/alumno-protegido): el quiz se califica y se muestra en
+    // pantalla, pero no se guarda (cada visita lo encuentra sin contestar).
+    if (esAlumnoProtegido(user.id)) return NextResponse.json({ ok: true })
 
     // Guardar respuestas (upsert — permite re-intentar si no se guardó antes)
     const { error } = await supabase

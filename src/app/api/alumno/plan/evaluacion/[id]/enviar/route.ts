@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { alumnoDeArea, puedeVerMateria } from '@/lib/area/acceso'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 // ─── POST /api/alumno/plan/evaluacion/[id]/enviar ────────────────────────────
 // Mismo contrato y calificación que /api/alumno/evaluacion/[id]/enviar
@@ -14,6 +15,11 @@ export async function POST(
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+
+    // Cuenta compartida (lib/alumno-protegido), igual que en el examen de
+    // Preparatoria: califica y ve el resultado, pero no consume intentos, no
+    // guarda el intento ni recalcula la calificación de la materia.
+    const protegido = esAlumnoProtegido(user.id)
 
     const alumno = await alumnoDeArea(supabase, user.id)
     if (!alumno) return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
@@ -40,15 +46,18 @@ export async function POST(
       return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
     }
 
-    const { count: intentosUsados } = await supabase
-      .from('intentos_evaluacion')
-      .select('id', { count: 'exact', head: true })
-      .eq('alumno_id', alumno.id)
-      .eq('evaluacion_id', params.id)
+    let usados = 0
+    if (!protegido) {
+      const { count: intentosUsados } = await supabase
+        .from('intentos_evaluacion')
+        .select('id', { count: 'exact', head: true })
+        .eq('alumno_id', alumno.id)
+        .eq('evaluacion_id', params.id)
 
-    const usados = intentosUsados ?? 0
-    if (usados >= ev.intentos_max) {
-      return NextResponse.json({ error: 'No tienes más intentos disponibles' }, { status: 400 })
+      usados = intentosUsados ?? 0
+      if (usados >= ev.intentos_max) {
+        return NextResponse.json({ error: 'No tienes más intentos disponibles' }, { status: 400 })
+      }
     }
 
     const body = await request.json()
@@ -107,27 +116,29 @@ export async function POST(
     const aprobado = calificacion >= 6.0
     const intentoNumero = usados + 1
 
-    const { error: intentoError } = await supabase
-      .from('intentos_evaluacion')
-      .insert({
-        alumno_id: alumno.id,
-        evaluacion_id: params.id,
-        respuestas: respuestasAlumno,
-        calificacion,
-        aprobado,
-        intento_numero: intentoNumero,
-        tiempo_segundos: 0,
+    if (!protegido) {
+      const { error: intentoError } = await supabase
+        .from('intentos_evaluacion')
+        .insert({
+          alumno_id: alumno.id,
+          evaluacion_id: params.id,
+          respuestas: respuestasAlumno,
+          calificacion,
+          aprobado,
+          intento_numero: intentoNumero,
+          tiempo_segundos: 0,
+        })
+
+      if (intentoError) {
+        return NextResponse.json({ error: intentoError.message }, { status: 500 })
+      }
+
+      // Calificación propia de la materia (mejor intento) en `calificaciones`.
+      await supabase.rpc('recalcular_calificacion', {
+        p_alumno_id: alumno.id,
+        p_materia_id: ev.materia_id,
       })
-
-    if (intentoError) {
-      return NextResponse.json({ error: intentoError.message }, { status: 500 })
     }
-
-    // Calificación propia de la materia (mejor intento) en `calificaciones`.
-    await supabase.rpc('recalcular_calificacion', {
-      p_alumno_id: alumno.id,
-      p_materia_id: ev.materia_id,
-    })
 
     return NextResponse.json({
       calificacion,

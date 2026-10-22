@@ -13,7 +13,8 @@
  * Si el JSON trae algo que el componente no sabe pintar, la falla queda dentro
  * de este bloque (ErrorBoundary): la semana, sus videos y su quiz siguen.
  */
-import { Component, type ReactNode } from 'react'
+import { Component, useEffect, useState, type ReactNode } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import Actividades from './Actividades'
 import { BotonDescargaPdf } from './Descargas'
 import { vistaActividades } from './datos'
@@ -31,6 +32,38 @@ class Aislar extends Component<{ children: ReactNode; respaldo: ReactNode }, { e
   }
 }
 
+// EDVEX: el avance de las actividades se guarda en el navegador POR ALUMNO, para
+// que al cambiar de cuenta en el mismo equipo no aparezcan las respuestas de otro.
+// Se resuelve `alumnos.id` del usuario en sesión (una vez por usuario); sin fila de
+// alumno (admin en vista previa) se usa su id de usuario.
+const alumnoPorUsuario = new Map<string, Promise<string>>()
+
+async function alumnoEnSesion(): Promise<string> {
+  const supabase = createClient()
+  const { data: { session } } = await supabase.auth.getSession()
+  const userId = session?.user?.id
+  if (!userId) return 'sin-sesion'
+  let p = alumnoPorUsuario.get(userId)
+  if (!p) {
+    p = (async () => {
+      const { data } = await supabase.from('alumnos').select('id').eq('usuario_id', userId).maybeSingle()
+      return (data as { id: string } | null)?.id ?? `usuario-${userId}`
+    })()
+    alumnoPorUsuario.set(userId, p)
+  }
+  return p
+}
+
+function useAlumnoEnSesion(): string | null {
+  const [alumno, setAlumno] = useState<string | null>(null)
+  useEffect(() => {
+    let vivo = true
+    alumnoEnSesion().then(a => { if (vivo) setAlumno(a) }).catch(() => { if (vivo) setAlumno('sin-sesion') })
+    return () => { vivo = false }
+  }, [])
+  return alumno
+}
+
 export default function SeccionActividades({
   actividades,
   pdfUrl,
@@ -41,6 +74,7 @@ export default function SeccionActividades({
   /** Acento legible sobre la tarjeta oscura (para el ícono del botón solo-PDF). */
   acento?: string
 }) {
+  const alumno = useAlumnoEnSesion()
   const vista = vistaActividades(actividades, pdfUrl)
   if (vista.tipo === 'nada') return null
 
@@ -52,6 +86,9 @@ export default function SeccionActividades({
   )
 
   if (vista.tipo === 'solo-pdf') return soloPdf(vista.pdfUrl)
+
+  // Hasta saber quién es el alumno no se lee ni se escribe avance (evita mezclar cuentas).
+  if (!alumno) return null
 
   return (
     // key por unidad: cada semana / lección tiene su propio límite de error (si
@@ -70,7 +107,7 @@ export default function SeccionActividades({
           style={{ background: 'var(--color-fondo)', border: '1px solid var(--color-borde)' }}
           data-actividades="interactivas"
         >
-          <Actividades key={vista.datos.unidad.id} datos={vista.datos} pdfUrl={vista.pdfUrl ?? undefined} />
+          <Actividades key={`${alumno}:${vista.datos.unidad.id}`} datos={vista.datos} pdfUrl={vista.pdfUrl ?? undefined} alumno={alumno} />
         </div>
       </div>
     </Aislar>
