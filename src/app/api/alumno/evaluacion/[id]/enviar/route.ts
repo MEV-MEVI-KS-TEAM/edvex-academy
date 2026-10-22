@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { alumnoPuedeAccederEvaluacion } from '@/lib/alumno-evaluacion-access'
-import { esAlumnoProtegido } from '@/lib/alumno-protegido'
+import { esAlumnoProtegido, mesesConAcceso } from '@/lib/alumno-protegido'
 
 export async function POST(
   request: NextRequest,
@@ -19,13 +19,13 @@ export async function POST(
     // Obtener alumno
     const { data: alumnoData } = await supabase
       .from('alumnos')
-      .select('id, meses_desbloqueados')
+      .select('id, meses_desbloqueados, area')
       .eq('usuario_id', user.id)
       .single()
 
     if (!alumnoData) return NextResponse.json({ error: 'Alumno no encontrado' }, { status: 404 })
 
-    const alumno = alumnoData as { id: string; meses_desbloqueados: number }
+    const alumno = alumnoData as { id: string; meses_desbloqueados: number; area: string | null }
 
     // Obtener evaluación
     const { data: evaluacion, error: evalError } = await supabase
@@ -64,7 +64,7 @@ export async function POST(
     }
     const codigo = m?.codigo ?? ''
     const numeroMes = m?.meses_contenido?.numero ?? 0
-    if (!alumnoPuedeAccederEvaluacion(codigo, numeroMes, alumno.meses_desbloqueados)) {
+    if (!alumnoPuedeAccederEvaluacion(codigo, numeroMes, mesesConAcceso(user.id, alumno.meses_desbloqueados, alumno.area))) {
       return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
     }
 

@@ -176,7 +176,7 @@ export default function WeekRoadmap({
                     className="text-xs px-2 py-0.5 rounded-full font-medium"
                     style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8' }}
                   >
-                    {libre ? 'Viendo' : lang === 'en' ? 'In progress' : 'En curso'}
+                    {libre ? (lang === 'en' ? 'Viewing' : 'Viendo') : lang === 'en' ? 'In progress' : 'En curso'}
                   </span>
                 )}
                 {estado === 'completado' && (

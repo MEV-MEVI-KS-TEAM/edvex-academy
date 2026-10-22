@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { esAlumnoProtegido } from '@/lib/alumno-protegido'
+import { esAlumnoProtegido, mesesConAcceso } from '@/lib/alumno-protegido'
 
 /**
  * Verifica que el alumno tenga acceso al mes al que pertenece la semana.
@@ -62,16 +62,16 @@ export async function GET(
     // Obtener alumno con meses_desbloqueados
     const { data: alumnoData } = await supabase
       .from('alumnos')
-      .select('id, meses_desbloqueados')
+      .select('id, meses_desbloqueados, area')
       .eq('usuario_id', user.id)
       .single()
 
     if (!alumnoData) return NextResponse.json({ error: 'Alumno no encontrado' }, { status: 404 })
 
-    const { id: alumnoId, meses_desbloqueados } = alumnoData as { id: string; meses_desbloqueados: number }
+    const { id: alumnoId, meses_desbloqueados, area } = alumnoData as { id: string; meses_desbloqueados: number; area: string | null }
 
     // Verificar acceso al mes de la semana
-    const acceso = await verificarAccesoSemana(supabase, semanaId, alumnoId, meses_desbloqueados)
+    const acceso = await verificarAccesoSemana(supabase, semanaId, alumnoId, mesesConAcceso(user.id, meses_desbloqueados, area))
     if (!acceso.ok) return NextResponse.json({ error: acceso.error }, { status: 403 })
 
     // Obtener preguntas del quiz para esta semana
@@ -118,16 +118,16 @@ export async function POST(
     // Obtener alumno con meses_desbloqueados
     const { data: alumnoData } = await supabase
       .from('alumnos')
-      .select('id, meses_desbloqueados')
+      .select('id, meses_desbloqueados, area')
       .eq('usuario_id', user.id)
       .single()
 
     if (!alumnoData) return NextResponse.json({ error: 'Alumno no encontrado' }, { status: 404 })
 
-    const { id: alumnoId, meses_desbloqueados } = alumnoData as { id: string; meses_desbloqueados: number }
+    const { id: alumnoId, meses_desbloqueados, area } = alumnoData as { id: string; meses_desbloqueados: number; area: string | null }
 
     // Verificar acceso al mes de la semana
-    const acceso = await verificarAccesoSemana(supabase, semanaId, alumnoId, meses_desbloqueados)
+    const acceso = await verificarAccesoSemana(supabase, semanaId, alumnoId, mesesConAcceso(user.id, meses_desbloqueados, area))
     if (!acceso.ok) return NextResponse.json({ error: acceso.error }, { status: 403 })
 
     // Cuenta compartida (lib/alumno-protegido): el quiz se califica y se muestra en

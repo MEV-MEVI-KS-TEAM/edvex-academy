@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { firmarVideoUrl } from '@/lib/video/bunny-firma'
+import { mesesConAcceso, semanasLibres } from '@/lib/alumno-protegido'
 
 export async function GET(
   _request: NextRequest,
@@ -14,13 +15,13 @@ export async function GET(
     // Obtener alumno para verificar acceso
     const { data: alumnoData } = await supabase
       .from('alumnos')
-      .select('id, meses_desbloqueados, inscripcion_pagada')
+      .select('id, meses_desbloqueados, inscripcion_pagada, area')
       .eq('usuario_id', user.id)
       .single()
 
     if (!alumnoData) return NextResponse.json({ error: 'Alumno no encontrado' }, { status: 404 })
 
-    const alumno = alumnoData as { id: string; meses_desbloqueados: number; inscripcion_pagada: boolean }
+    const alumno = alumnoData as { id: string; meses_desbloqueados: number; inscripcion_pagada: boolean; area: string | null }
 
     // Verificar que la materia pertenece a un mes desbloqueado
     const { data: mesData } = await supabase
@@ -48,7 +49,7 @@ export async function GET(
 
     // TUT* (Tutoría) siempre accesible para cualquier alumno activo.
     // Demás materias: solo si el mes está desbloqueado.
-    if (!esTutoria && numeroMes > alumno.meses_desbloqueados) {
+    if (!esTutoria && numeroMes > mesesConAcceso(user.id, alumno.meses_desbloqueados, alumno.area)) {
       return NextResponse.json({ error: 'No tienes acceso a esta materia' }, { status: 403 })
     }
 
@@ -129,6 +130,8 @@ export async function GET(
       ...m,
       semanas,
       evaluaciones: evaluacionesConIntentos,
+      // Cuentas protegidas: las semanas no se encadenan por avance.
+      semanas_libres: semanasLibres(user.id),
     })
   } catch {
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
