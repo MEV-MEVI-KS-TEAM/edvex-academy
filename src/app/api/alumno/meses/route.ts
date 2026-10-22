@@ -10,7 +10,7 @@ export async function GET() {
 
     const { data: alumnoData, error: alumnoError } = await supabase
       .from('alumnos')
-      .select('meses_desbloqueados, inscripcion_pagada')
+      .select('meses_desbloqueados, inscripcion_pagada, area')
       .eq('usuario_id', user.id)
       .single()
 
@@ -19,10 +19,11 @@ export async function GET() {
     const alumno = alumnoData as unknown as {
       meses_desbloqueados: number
       inscripcion_pagada: boolean
+      area: string | null
     }
 
     // Cuentas protegidas: todo el programa abierto (lib/alumno-protegido).
-    const meses = mesesConAcceso(user.id, alumno.meses_desbloqueados)
+    const meses = mesesConAcceso(user.id, alumno.meses_desbloqueados, alumno.area)
 
     // Siempre mostrar todos los meses con candado/abierto.
     // TUT101 siempre desbloqueada. Demás materias según meses_desbloqueados.

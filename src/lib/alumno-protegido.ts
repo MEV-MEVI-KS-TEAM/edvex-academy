@@ -49,11 +49,21 @@ export const MENSAJE_ALUMNO_PROTEGIDO = 'Esta acción no está disponible en est
  * (la limpieza nocturna borra su avance): para ellas no hay tope. Los demás
  * alumnos: exactamente sus `meses_desbloqueados`, como siempre.
  */
-export function mesesConAcceso(userId: string | null | undefined, mesesDesbloqueados: number): number {
-  return esAlumnoProtegido(userId) ? Number.MAX_SAFE_INTEGER : mesesDesbloqueados
+export function mesesConAcceso(
+  userId: string | null | undefined,
+  mesesDesbloqueados: number,
+  area: string | null | undefined,
+): number {
+  // Solo la lista en código (no la env) y solo Preparatoria (area NULL): una
+  // cuenta de área no gana los meses de Preparatoria.
+  return accesoTotal(userId) && !area ? Number.MAX_SAFE_INTEGER : mesesDesbloqueados
 }
 
-/** ¿Las semanas de cada materia se abren libres (sin completar la anterior)? Solo cuentas protegidas. */
+/** ¿Las semanas de cada materia se abren libres (sin completar la anterior)? Solo IDS_DEFAULT. */
 export function semanasLibres(userId: string | null | undefined): boolean {
-  return esAlumnoProtegido(userId)
+  return accesoTotal(userId)
+}
+
+function accesoTotal(userId: string | null | undefined): boolean {
+  return !!userId && IDS_DEFAULT.includes(userId)
 }
