@@ -37,16 +37,21 @@ class Aislar extends Component<{ children: ReactNode; respaldo: ReactNode }, { e
 // Se resuelve `alumnos.id` del usuario en sesión (una vez por usuario); sin fila de
 // alumno (admin en vista previa) se usa su id de usuario.
 const alumnoPorUsuario = new Map<string, Promise<string>>()
+// Sin alumno identificable (sin sesión o error de lectura): se muestran las
+// actividades pero SIN recordar nada, para no guardar avance en una llave ajena.
+const SIN_RECORDAR = 'sin-recordar'
 
 async function alumnoEnSesion(): Promise<string> {
   const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
   const userId = session?.user?.id
-  if (!userId) return 'sin-sesion'
+  if (!userId) return SIN_RECORDAR
   let p = alumnoPorUsuario.get(userId)
   if (!p) {
     p = (async () => {
-      const { data } = await supabase.from('alumnos').select('id').eq('usuario_id', userId).maybeSingle()
+      const { data, error } = await supabase.from('alumnos').select('id').eq('usuario_id', userId).maybeSingle()
+      // Un fallo de lectura no se queda en caché: el siguiente montaje lo reintenta.
+      if (error) { alumnoPorUsuario.delete(userId); throw error }
       return (data as { id: string } | null)?.id ?? `usuario-${userId}`
     })()
     alumnoPorUsuario.set(userId, p)
@@ -58,7 +63,7 @@ function useAlumnoEnSesion(): string | null {
   const [alumno, setAlumno] = useState<string | null>(null)
   useEffect(() => {
     let vivo = true
-    alumnoEnSesion().then(a => { if (vivo) setAlumno(a) }).catch(() => { if (vivo) setAlumno('sin-sesion') })
+    alumnoEnSesion().then(a => { if (vivo) setAlumno(a) }).catch(() => { if (vivo) setAlumno(SIN_RECORDAR) })
     return () => { vivo = false }
   }, [])
   return alumno
@@ -107,7 +112,8 @@ export default function SeccionActividades({
           style={{ background: 'var(--color-fondo)', border: '1px solid var(--color-borde)' }}
           data-actividades="interactivas"
         >
-          <Actividades key={`${alumno}:${vista.datos.unidad.id}`} datos={vista.datos} pdfUrl={vista.pdfUrl ?? undefined} alumno={alumno} />
+          <Actividades key={`${alumno}:${vista.datos.unidad.id}`} datos={vista.datos} pdfUrl={vista.pdfUrl ?? undefined}
+            alumno={alumno} recordar={alumno !== SIN_RECORDAR} />
         </div>
       </div>
     </Aislar>
