@@ -15,6 +15,12 @@
 -- La función es SECURITY DEFINER y nadie más que postgres (pg_cron) puede
 -- ejecutarla: se le quita EXECUTE a PUBLIC, anon y authenticated, así que no se
 -- puede llamar por /rest/v1/rpc.
+--
+-- Fuera de alcance, a propósito: ids agregados solo por la env ALUMNOS_PROTEGIDOS
+-- (quedan protegidos pero no se limpian) y el avance de actividades, que vive en
+-- el navegador (localStorage), no en la base.
+
+BEGIN;
 
 CREATE OR REPLACE FUNCTION public.limpiar_cuentas_protegidas()
 RETURNS jsonb
@@ -63,3 +69,5 @@ REVOKE ALL ON FUNCTION public.limpiar_cuentas_protegidas() FROM anon, authentica
 
 -- 3:00 am CDMX = 09:00 UTC (pg_cron corre en GMT). Con el mismo nombre, re-ejecutar actualiza el job.
 SELECT cron.schedule('limpieza-cuentas-protegidas', '0 9 * * *', $cron$SELECT public.limpiar_cuentas_protegidas()$cron$);
+
+COMMIT;
