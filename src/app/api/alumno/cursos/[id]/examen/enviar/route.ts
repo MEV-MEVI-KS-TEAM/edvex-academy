@@ -11,6 +11,7 @@ import {
   puedeVerCurso,
 } from '@/lib/cursos/examen'
 import type { RespuestaEnviada } from '@/types/cursos-examen'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 // ─── POST /api/alumno/cursos/[id]/examen/enviar ──────────────────────────────
 // Port plantilla PV. Califica 100% en el servidor, guarda el resultado e
@@ -70,6 +71,21 @@ export async function POST(
 
     const permitidos = INTENTOS_PERMITIDOS_DEFAULT
     const minima = CALIFICACION_MINIMA_DEFAULT
+
+    // Cuenta compartida con prospectos (como en /api/alumno/evaluacion/[id]/enviar):
+    // califica y ve su resultado, pero no guarda el intento ni lo cuenta.
+    if (esAlumnoProtegido(user.id)) {
+      const simulado = calificar(preguntas, enviadas, true)
+      if (simulado.contestadas === 0) {
+        return NextResponse.json({ error: 'Contesta al menos una pregunta antes de enviar el examen.' }, { status: 400 })
+      }
+      return NextResponse.json({
+        id: null, created_at: new Date().toISOString(), aciertos: simulado.aciertos, total: simulado.total,
+        porcentaje: simulado.porcentaje, desglose_temas: simulado.desglose, revision: simulado.revision,
+        intentos_usados: 0, intentos_permitidos: permitidos, calificacion_minima: minima,
+        aprobado: simulado.porcentaje >= minima, revision_completa: true,
+      })
+    }
 
     // ── Candado 3: aprobar CIERRA el examen ──
     const usados = (previos ?? []).length

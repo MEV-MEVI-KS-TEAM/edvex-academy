@@ -37,6 +37,12 @@ export async function GET(
       meses_contenido: { numero: number } | null
     }
 
+    // Materias de un programa por área (Secundaria / licenciatura) no tienen mes:
+    // se sirven solo por /api/alumno/plan/materia, con su propio control de acceso.
+    if (!materiaInfo.mes_contenido_id) {
+      return NextResponse.json({ error: 'No tienes acceso a esta materia' }, { status: 403 })
+    }
+
     const numeroMes = materiaInfo.meses_contenido?.numero ?? 0
     const esTutoria = materiaInfo.codigo.startsWith('TUT')
 
