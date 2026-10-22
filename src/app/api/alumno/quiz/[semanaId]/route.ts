@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { esAlumnoProtegido } from '@/lib/alumno-protegido'
 
 /**
  * Verifica que el alumno tenga acceso al mes al que pertenece la semana.
@@ -128,6 +129,10 @@ export async function POST(
     // Verificar acceso al mes de la semana
     const acceso = await verificarAccesoSemana(supabase, semanaId, alumnoId, meses_desbloqueados)
     if (!acceso.ok) return NextResponse.json({ error: acceso.error }, { status: 403 })
+
+    // Cuenta compartida (lib/alumno-protegido): el quiz se califica y se muestra en
+    // pantalla, pero no se guarda (igual que en /api/alumno/plan/quiz).
+    if (esAlumnoProtegido(user.id)) return NextResponse.json({ ok: true })
 
     // Guardar respuestas (upsert — permite re-intentar si no se guardó antes)
     const { error } = await supabase
