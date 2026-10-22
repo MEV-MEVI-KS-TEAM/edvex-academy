@@ -16,6 +16,9 @@
  * protección funcione aunque no se configure la env en el hosting. La env
  * `ALUMNOS_PROTEGIDOS` (si existe) SE SUMA a esta lista, no la reemplaza.
  */
+// ⚠️ La limpieza nocturna (pg_cron «limpieza-cuentas-protegidas», función
+// public.limpiar_cuentas_protegidas, scripts/migration-limpieza-protegidos.sql)
+// usa ESTOS MISMOS ids: si agregas o quitas una cuenta aquí, cámbiala también allá.
 const IDS_DEFAULT = [
   '50e1f467-766b-401d-8473-70e014873ec0', // serranomas@outlook.com — Preparatoria
   // Cuentas por área que los vendedores muestran en videollamada (21-oct-2026):
