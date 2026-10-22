@@ -136,9 +136,10 @@ export async function updateSession(request: NextRequest) {
   // Única regla: si ya tiene plan, no puede volver a /alumno/elegir-plan.
   const pathname = request.nextUrl.pathname
 
-  // Alumno de un ÁREA (secundaria, cursos de ingreso, licenciatura): su contenido
-  // vive en Mis cursos. Las páginas del programa de Preparatoria (materias por mes,
-  // calificaciones, constancia, pagos, elegir plan) lo regresan a /alumno/cursos.
+  // Alumno de un ÁREA (secundaria, cursos de ingreso, licenciatura): las páginas
+  // del programa de Preparatoria (materias por mes, calificaciones, constancia,
+  // pagos, elegir plan) lo regresan a SU programa: secundaria y licenciatura a
+  // /alumno/plan (materias por mes del área), cursos de ingreso a /alumno/cursos.
   // `alumnos.area` NULL = Preparatoria, exactamente como antes; la consulta solo
   // corre en estas rutas.
   const RUTAS_PREPA = /^\/alumno(\/(materias|materia|mes|calificaciones|constancia|pagar|evaluacion|elegir-plan)(\/.*)?)?\/?$/
@@ -148,11 +149,30 @@ export async function updateSession(request: NextRequest) {
       .select('area')
       .eq('usuario_id', user.id)
       .maybeSingle()
-    if ((alumnoArea as { area?: string | null } | null)?.area) {
+    const area = (alumnoArea as { area?: string | null } | null)?.area
+    if (area) {
       const url = request.nextUrl.clone()
-      url.pathname = '/alumno/cursos'
+      url.pathname = area === 'secundaria' || area === 'licenciatura' ? '/alumno/plan' : '/alumno/cursos'
       const redireccion = NextResponse.redirect(url)
       // conservar las cookies de sesión que updateSession pudo refrescar
+      supabaseResponse.cookies.getAll().forEach(c => redireccion.cookies.set(c))
+      return redireccion
+    }
+  }
+
+  // /alumno/plan es el programa de Secundaria / licenciatura: cualquier otro
+  // alumno (Preparatoria con area NULL, cursos de ingreso) vuelve a su inicio.
+  if (user && /^\/alumno\/plan(\/.*)?$/.test(pathname)) {
+    const { data: alumnoPlan } = await supabase
+      .from('alumnos')
+      .select('area')
+      .eq('usuario_id', user.id)
+      .maybeSingle()
+    const area = (alumnoPlan as { area?: string | null } | null)?.area
+    if (area !== 'secundaria' && area !== 'licenciatura') {
+      const url = request.nextUrl.clone()
+      url.pathname = area ? '/alumno/cursos' : '/alumno'
+      const redireccion = NextResponse.redirect(url)
       supabaseResponse.cookies.getAll().forEach(c => redireccion.cookies.set(c))
       return redireccion
     }

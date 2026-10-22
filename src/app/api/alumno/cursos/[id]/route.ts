@@ -5,6 +5,7 @@ import { porcentajeProgreso, cursoCompletado } from '@/lib/cursos/progreso'
 import { modulosConProgreso, portadaFirmada } from '@/lib/cursos/alumno-data'
 import type { CursoDetalleAlumno } from '@/types/cursos-alumno'
 import type { CursoTipo } from '@/types/cursos'
+import { faltanColumnasActividades, urlPdf } from '@/components/actividades/datos'
 
 // ─── GET /api/alumno/cursos/[id] — detalle del curso para el visor ────────────
 // Sesión del usuario + RLS: si el alumno no está inscrito o el curso no está
@@ -26,11 +27,19 @@ export async function GET(
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
 
-    const { data: curso } = await supabase
+    // `cuaderno_pdf_url` (actividades) se pide con lo demás; una base sin esa
+    // migración responde 42703 y se relee sin ella (curso como antes).
+    const COLUMNAS_CURSO = 'id, nombre, nombre_en, descripcion, descripcion_en, tipo, estado, portada_path'
+    const leerCurso = (columnas: string) => supabase
       .from('cursos')
-      .select('id, nombre, nombre_en, descripcion, descripcion_en, tipo, estado, portada_path')
+      .select(columnas)
       .eq('id', params.id)
       .maybeSingle()
+    const conCuaderno = await leerCurso(`${COLUMNAS_CURSO}, cuaderno_pdf_url`)
+    const cursoData = faltanColumnasActividades(conCuaderno.error)
+      ? (await leerCurso(COLUMNAS_CURSO)).data
+      : conCuaderno.data
+    const curso = cursoData as unknown as Record<string, unknown> | null
 
     // RLS vacío = sin acceso (no inscrito / no publicado / no existe).
     if (!curso) return NextResponse.json({ error: 'Curso no disponible' }, { status: 404 })
@@ -71,6 +80,7 @@ export async function GET(
         tipo: curso.tipo as CursoTipo,
         estado: curso.estado as string,
         portadaUrl: await portadaFirmada(admin, curso.portada_path as string | null),
+        cuaderno_pdf_url: urlPdf(curso.cuaderno_pdf_url),
       },
       modoPreview,
       modulos,

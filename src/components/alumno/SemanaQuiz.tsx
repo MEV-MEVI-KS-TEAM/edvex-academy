@@ -24,11 +24,13 @@ interface SemanaQuizProps {
   semanaId: string
   alumnoId: string
   lang: string
+  /** Base de la API del quiz. Sin esto: la de Preparatoria (/api/alumno/quiz). */
+  apiBase?: string
 }
 
 const CARD = { background: '#181C26', border: '1px solid #2A2F3E' }
 
-export default function SemanaQuiz({ semanaId, lang }: SemanaQuizProps) {
+export default function SemanaQuiz({ semanaId, lang, apiBase = '/api/alumno/quiz' }: SemanaQuizProps) {
   const [preguntas, setPreguntas] = useState<Pregunta[]>([])
   const [respuestaPrevia, setRespuestaPrevia] = useState<RespuestaPrevia | null>(null)
   const [loading, setLoading] = useState(true)
@@ -58,7 +60,7 @@ export default function SemanaQuiz({ semanaId, lang }: SemanaQuizProps) {
     setRespondidas({})
     setGuardando(false)
 
-    fetch(`/api/alumno/quiz/${semanaId}`)
+    fetch(`${apiBase}/${semanaId}`)
       .then(r => {
         if (!r.ok) throw new Error('fetch')
         return r.json()
@@ -74,7 +76,7 @@ export default function SemanaQuiz({ semanaId, lang }: SemanaQuizProps) {
         setLoadError(lang === 'en' ? 'Could not load the quiz. Pull to refresh or try again.' : 'No se pudo cargar el cuestionario. Recarga e intenta de nuevo.')
       })
       .finally(() => setLoading(false))
-  }, [semanaId, lang])
+  }, [semanaId, lang, apiBase])
 
   // Animar entrada de cada pregunta
   useGSAP(() => {
@@ -132,7 +134,7 @@ export default function SemanaQuiz({ semanaId, lang }: SemanaQuizProps) {
       }
     })
     try {
-      const res = await fetch(`/api/alumno/quiz/${semanaId}`, {
+      const res = await fetch(`${apiBase}/${semanaId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ respuestas }),

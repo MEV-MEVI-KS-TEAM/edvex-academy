@@ -13,6 +13,9 @@ import FadeIn from '@/components/ui/FadeIn'
 import SplitTitle from '@/components/ui/SplitTitle'
 import SemanaQuiz from '@/components/alumno/SemanaQuiz'
 import NotasPersonales from '@/components/alumno/NotasPersonales'
+import SeccionActividades from '@/components/actividades/SeccionActividades'
+import { BotonDescargaPdf } from '@/components/actividades/Descargas'
+import { urlPdf } from '@/components/actividades/datos'
 import gsap from 'gsap'
 import { useGSAP } from '@gsap/react'
 
@@ -23,6 +26,9 @@ interface Semana {
   id: string; numero: number; titulo: string; titulo_en: string
   contenido: string; contenido_en: string
   url_en: string; videos: Video[]
+  /** «actividades/1» de la semana; null = no hay. */
+  actividades?: unknown
+  actividades_pdf_url?: string | null
 }
 interface Evaluacion {
   id: string; titulo: string; titulo_en: string; tipo: string; intentos_max: number
@@ -37,6 +43,8 @@ interface Materia {
   bibliografia_en?: BibItem[]
   semanas: Semana[]
   evaluaciones: Evaluacion[]
+  /** Cuaderno de actividades de toda la materia. */
+  cuaderno_pdf_url?: string | null
 }
 
 type Tab = 'contenido' | 'examen' | 'informacion'
@@ -226,6 +234,11 @@ export default function MateriaPage() {
             <div className="w-2 h-2 rounded-full" style={{ background: materia.color_hex || '#5B6CFF' }} />
           </div>
           <SplitTitle text={loc(materia.nombre, materia.nombre_en)} className="text-xl font-bold mt-1" style={{ color: '#F1F5F9' }} />
+          {urlPdf(materia.cuaderno_pdf_url) && (
+            <div className="mt-3">
+              <BotonDescargaPdf url={materia.cuaderno_pdf_url} texto="Descargar cuaderno completo" marca="cuaderno" />
+            </div>
+          )}
         </div>
       </div>
       </FadeIn>
@@ -342,6 +355,14 @@ export default function MateriaPage() {
                           <span>{alumnoError}</span>
                         </div>
                       )}
+
+                      {/* Actividades interactivas + «Descargar PDF» de la semana.
+                          Sin actividades ni PDF no pinta nada. */}
+                      <SeccionActividades
+                        actividades={semana.actividades}
+                        pdfUrl={semana.actividades_pdf_url}
+                        acento="#8D9AFF"
+                      />
 
                       {/* Mini quiz de refuerzo */}
                       {alumnoId && (

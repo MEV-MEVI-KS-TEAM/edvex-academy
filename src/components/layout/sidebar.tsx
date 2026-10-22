@@ -69,19 +69,27 @@ interface SidebarProps {
   userName: string
   isOpen:   boolean
   onClose:  () => void
-  /** Alumno de un área (secundaria, cursos de ingreso, licenciatura): su programa vive en Mis cursos. */
+  /** Alumno de un área (secundaria, cursos de ingreso, licenciatura): sin el programa de Preparatoria. */
   soloCursos?: boolean
+  /** Área con plan de materias (secundaria, licenciatura): su programa vive en /alumno/plan. */
+  conPlan?: boolean
 }
 
 // Lo que ve un alumno de área: su contenido está en Mis cursos (sin materias por mes de Preparatoria).
 const SOLO_CURSOS = new Set(['/alumno/cursos', '/alumno/documentos', '/alumno/perfil'])
 
-export function Sidebar({ role, userName, isOpen, onClose, soloCursos = false }: SidebarProps) {
+// Área con plan de materias (secundaria, licenciatura): sus materias por mes en /alumno/plan.
+const NAV_PLAN: NavItem[] = [
+  { labelKey: 'sidebar.mySubjects',  href: '/alumno/plan',          icon: BookOpen        },
+  ...NAV_ITEMS.ALUMNO.filter(i => i.href === '/alumno/documentos' || i.href === '/alumno/perfil'),
+]
+
+export function Sidebar({ role, userName, isOpen, onClose, soloCursos = false, conPlan = false }: SidebarProps) {
   const pathname  = usePathname()
   const router    = useRouter()
   const { t }     = useLanguage()
   const navItems  = soloCursos && role === 'ALUMNO'
-    ? NAV_ITEMS.ALUMNO.filter(i => SOLO_CURSOS.has(i.href))
+    ? (conPlan ? NAV_PLAN : NAV_ITEMS.ALUMNO.filter(i => SOLO_CURSOS.has(i.href)))
     : NAV_ITEMS[role]
   const [pendientesCount, setPendientesCount] = useState(0)
 

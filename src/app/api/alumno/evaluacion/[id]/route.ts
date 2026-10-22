@@ -44,14 +44,19 @@ export async function GET(
     // Verificar acceso: TUT* siempre; demás materias según mes vs meses_desbloqueados
     const { data: materiaRow } = await supabase
       .from('materias')
-      .select('codigo, meses_contenido(numero)')
+      .select('codigo, mes_contenido_id, meses_contenido(numero)')
       .eq('id', ev.materia_id)
       .single()
 
     const m = materiaRow as unknown as {
       codigo: string
+      mes_contenido_id: string | null
       meses_contenido: { numero: number } | null
     } | null
+    // Materias de un programa por área no tienen mes: su examen va por /api/alumno/plan/evaluacion.
+    if (!m?.mes_contenido_id) {
+      return NextResponse.json({ error: 'No tienes acceso a esta evaluación' }, { status: 403 })
+    }
     const codigo = m?.codigo ?? ''
     const numeroMes = m?.meses_contenido?.numero ?? 0
     if (!alumnoPuedeAccederEvaluacion(codigo, numeroMes, alumno.meses_desbloqueados)) {

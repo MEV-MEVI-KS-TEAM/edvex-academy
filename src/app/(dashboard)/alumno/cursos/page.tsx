@@ -94,7 +94,7 @@ export default function MisCursosPage() {
             return (
               <button
                 key={curso.id}
-                onClick={() => router.push(`/cursos/${curso.id}`)}
+                onClick={() => router.push(`/alumno/curso/${curso.id}`)}
                 className="text-left rounded-2xl overflow-hidden flex flex-col transition-all duration-200 hover:-translate-y-0.5"
                 style={{ ...CARD, boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }}
                 onMouseEnter={e => { e.currentTarget.style.borderColor = '#5B6CFF' }}

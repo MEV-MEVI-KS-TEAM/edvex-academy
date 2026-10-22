@@ -56,7 +56,9 @@ export default async function AlumnoLayout({
     .select('area')
     .eq('usuario_id', user.id)
     .maybeSingle()
-  const soloCursos = Boolean((alumnoArea as { area?: string | null } | null)?.area)
+  const area = (alumnoArea as { area?: string | null } | null)?.area ?? null
+  const soloCursos = Boolean(area)
+  const conPlan = area === 'secundaria' || area === 'licenciatura'
 
   return (
     <DashboardLayout
@@ -66,6 +68,7 @@ export default async function AlumnoLayout({
       pageTitle="header.studentPortal"
       showFooter={true}
       soloCursos={soloCursos}
+      conPlan={conPlan}
     >
       <PageTransition>{children}</PageTransition>
     </DashboardLayout>

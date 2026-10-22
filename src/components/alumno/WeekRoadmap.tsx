@@ -19,9 +19,16 @@ interface WeekRoadmapProps {
   onSemanaClick: (semanaId: string) => void
   lang: string
   esTutorial?: boolean
+  /** Aula de cursos (port plantilla): el rótulo de cada paso («Lección»). Sin esto: Semana / Actividad. */
+  etiqueta?: string
+  /**
+   * Aula de cursos: ningún paso se bloquea por avance; los pendientes se pintan
+   * con su número y el seleccionado se resalta. Sin esto: la cadena de la materia.
+   */
+  libre?: boolean
 }
 
-type EstadoSemana = 'completado' | 'activo' | 'bloqueado'
+type EstadoSemana = 'completado' | 'activo' | 'bloqueado' | 'pendiente'
 
 function getEstado(
   semanaId: string,
@@ -44,15 +51,18 @@ function getEstado(
 export default function WeekRoadmap({
   semanas,
   semanasCompletadas,
+  semanaActivaId,
   onSemanaClick,
   lang,
   esTutorial = false,
+  etiqueta,
+  libre = false,
 }: WeekRoadmapProps) {
   const loc = (es: string, en?: string) => lang === 'en' && en ? en : es
   /** Tutorial TUT*: Actividad / Activity; demás materias: Semana / Week */
-  const etiquetaUnidad = esTutorial
+  const etiquetaUnidad = etiqueta ?? (esTutorial
     ? (lang === 'en' ? 'Activity' : 'Actividad')
-    : (lang === 'en' ? 'Week' : 'Semana')
+    : (lang === 'en' ? 'Week' : 'Semana'))
   const containerRef = useRef<HTMLDivElement>(null)
 
   useGSAP(() => {
@@ -82,7 +92,11 @@ export default function WeekRoadmap({
   return (
     <div ref={containerRef} className="flex flex-col">
       {semanas.map((semana, index) => {
-        const estado = getEstado(semana.id, index, semanas, semanasCompletadas)
+        const estado: EstadoSemana = libre
+          ? (semanasCompletadas.has(semana.id) ? 'completado' : semana.id === semanaActivaId ? 'activo' : 'pendiente')
+          : getEstado(semana.id, index, semanas, semanasCompletadas)
+        // En modo libre, el seleccionado se marca aunque ya esté completado.
+        const seleccionado = libre && semana.id === semanaActivaId
         const esUltima = index === semanas.length - 1
         const clickable = estado !== 'bloqueado'
 
@@ -99,7 +113,7 @@ export default function WeekRoadmap({
                 className={[
                   'min-w-[44px] min-h-[44px] w-11 h-11 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-500 relative z-10 touch-manipulation active:opacity-90',
                   estado === 'completado'
-                    ? 'bg-indigo-500 border-2 border-indigo-500'
+                    ? (seleccionado ? 'bg-indigo-500 border-2 border-indigo-300 ring-2 ring-indigo-400/40' : 'bg-indigo-500 border-2 border-indigo-500')
                     : estado === 'activo'
                     ? 'bg-indigo-500/10 border-2 border-indigo-500 animate-pulse'
                     : 'bg-transparent border-2 border-slate-600',
@@ -116,6 +130,11 @@ export default function WeekRoadmap({
                 )}
                 {estado === 'bloqueado' && (
                   <Lock className="w-4 h-4" style={{ color: '#475569' }} />
+                )}
+                {estado === 'pendiente' && (
+                  <span className="text-sm font-bold" style={{ color: '#94A3B8' }}>
+                    {semana.numero}
+                  </span>
                 )}
               </button>
 
@@ -147,7 +166,7 @@ export default function WeekRoadmap({
               <div className="flex items-center gap-2 mb-0.5 mt-1.5">
                 <span
                   className="text-xs font-mono transition-all duration-500"
-                  style={{ color: estado === 'bloqueado' ? '#475569' : '#6366F1' }}
+                  style={{ color: estado === 'bloqueado' ? '#475569' : estado === 'pendiente' ? '#94A3B8' : '#6366F1' }}
                 >
                   {etiquetaUnidad} {semana.numero}
                 </span>
@@ -157,7 +176,7 @@ export default function WeekRoadmap({
                     className="text-xs px-2 py-0.5 rounded-full font-medium"
                     style={{ background: 'rgba(99,102,241,0.15)', color: '#818CF8' }}
                   >
-                    {lang === 'en' ? 'In progress' : 'En curso'}
+                    {libre ? 'Viendo' : lang === 'en' ? 'In progress' : 'En curso'}
                   </span>
                 )}
                 {estado === 'completado' && (
@@ -179,7 +198,7 @@ export default function WeekRoadmap({
                   estado === 'bloqueado' ? 'opacity-40' : '',
                 ].join(' ')}
                 style={{
-                  color: estado === 'bloqueado' ? '#94A3B8' : '#F1F5F9',
+                  color: estado === 'bloqueado' ? '#94A3B8' : estado === 'pendiente' ? '#CBD5E1' : '#F1F5F9',
                 }}
               >
                 {loc(semana.titulo, semana.titulo_en)}
