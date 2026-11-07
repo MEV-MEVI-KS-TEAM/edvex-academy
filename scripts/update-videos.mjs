@@ -10,7 +10,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 )
 
-const YOUTUBE_API_KEY = 'AIzaSyC7-byoIitePLaQVTj1yCmKoJ_zgUEqW0Q'
+// La llave se lee de .env.local (nunca va en el código). Sin ella, el script aborta.
+const YOUTUBE_API_KEY = process.env.YOUTUBE_API_KEY
+if (!YOUTUBE_API_KEY) {
+  console.error('❌ YOUTUBE_API_KEY no encontrada en .env.local (los videos ya son de Bunny; este script es de una sola vez)')
+  process.exit(1)
+}
 const DELAY_MS = 200
 
 function sleep(ms) {
@@ -32,7 +37,15 @@ function youtubeSearch(query) {
     https.get(url, (res) => {
       let data = ''
       res.on('data', chunk => data += chunk)
-      res.on('end', () => resolve(JSON.parse(data)))
+      res.on('end', () => {
+        const json = JSON.parse(data)
+        // Llave inválida o borrada: abortar todo, no seguir «sin resultados».
+        if (json.error) {
+          console.error(`❌ YouTube Data API respondió ${json.error.code}: ${json.error.message}`)
+          process.exit(1)
+        }
+        resolve(json)
+      })
     }).on('error', reject)
   })
 }
