@@ -27,6 +27,8 @@ const IDS_DEFAULT = [
   'ff53509a-0dec-4ef8-946a-728aea32a39f', // andrea.morales — Administración
   'cc2fa082-b767-4a68-8970-fff6e2bd32a1', // rodrigo.castaneda — Derecho
   '02982a8d-f3e8-42d1-ac5f-d3e1bfc6032d', // fernanda.ortiz — Psicología
+  // Curso «Excel con IA» que se muestra a prospectos (21-nov-2026):
+  '0e7eaef7-5f75-4008-b239-25b502c618f7', // valeria.gutierrez — Cursos (Excel con IA)
 ]
 
 const IDS_ENV = (process.env.ALUMNOS_PROTEGIDOS ?? '')

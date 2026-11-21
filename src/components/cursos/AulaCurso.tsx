@@ -301,6 +301,8 @@ export default function AulaCurso({ cursoId }: { cursoId: string }) {
                   if (minLectura > 0) meta.push(`📖 ${minLectura} min lectura`)
                   if (activa.video_url) meta.push('🎬 1 video')
                   if (activa.tieneMaterial) meta.push('📄 material')
+                  const archivos = activa.archivos ?? []
+                  if (archivos.length > 0) meta.push(`📎 ${archivos.length} ${archivos.length === 1 ? 'archivo' : 'archivos'}`)
                   return (
                     <div className="rounded-xl p-5 space-y-4" style={CARD}>
                       {/* Header de la lección */}
@@ -336,11 +338,33 @@ export default function AulaCurso({ cursoId }: { cursoId: string }) {
                         </div>
                       )}
 
+                      {archivos.length > 0 && (
+                        <div className="space-y-2" style={{ borderTop: '1px solid #2A2F3E', paddingTop: '1rem' }}>
+                          <p className="text-xs font-medium" style={{ color: '#94A3B8' }}>Archivos de la lección</p>
+                          {archivos.map((a, i) => (
+                            <a
+                              key={`${i}-${a.nombre}`}
+                              href={a.url}
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all"
+                              style={{ background: '#0D1017', border: '1px solid #2A2F3E', color: '#F1F5F9' }}
+                            >
+                              <FileText className="w-4 h-4 flex-shrink-0" style={{ color: ACENTO }} />
+                              <span className="flex-1 min-w-0">
+                                <span className="block truncate">{a.nombre}</span>
+                                {a.etiqueta && <span className="block text-xs" style={{ color: '#94A3B8' }}>{a.etiqueta}</span>}
+                              </span>
+                              <Download className="w-4 h-4 flex-shrink-0" style={{ color: '#94A3B8' }} />
+                            </a>
+                          ))}
+                        </div>
+                      )}
+
                       {/* Actividades interactivas + «Descargar PDF» de la lección.
                           Sin actividades ni PDF no pinta nada. */}
                       <SeccionActividades actividades={activa.actividades} pdfUrl={activa.actividades_pdf_url} acento={ACENTO} />
 
-                      {!activa.video_url && !texto && !activa.tieneMaterial &&
+                      {!activa.video_url && !texto && !activa.tieneMaterial && archivos.length === 0 &&
                         vistaActividades(activa.actividades, activa.actividades_pdf_url).tipo === 'nada' && (
                         <p className="text-sm" style={{ color: '#94A3B8' }}>Esta lección aún no tiene contenido.</p>
                       )}

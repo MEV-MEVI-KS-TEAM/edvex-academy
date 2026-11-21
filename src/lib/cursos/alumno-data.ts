@@ -12,14 +12,31 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { firmarVideoUrl } from '@/lib/video/bunny-firma'
 import { SIGNED_URL_TTL } from './storage'
-import { BUCKET_CURSOS } from './archivos'
-import type { LeccionAlumno, ModuloAlumno } from '@/types/cursos-alumno'
+import { BUCKET_CURSOS, leerArchivosLeccion, nombreDescarga } from './archivos'
+import type { ArchivoLeccionAlumno, LeccionAlumno, ModuloAlumno } from '@/types/cursos-alumno'
 import { faltanColumnasActividades, leerActividades, urlPdf } from '@/components/actividades/datos'
 
 async function signed(supabase: SupabaseClient, path: string | null): Promise<string | null> {
   if (!path) return null
   const { data } = await supabase.storage.from(BUCKET_CURSOS).createSignedUrl(path, SIGNED_URL_TTL)
   return data?.signedUrl ?? null
+}
+
+/** Firma los archivos de descarga de una lección; `download` da el nombre legible. */
+async function archivosFirmados(
+  supabase: SupabaseClient,
+  valor: unknown,
+  cursoId: string
+): Promise<ArchivoLeccionAlumno[]> {
+  const archivos = leerArchivosLeccion(valor, cursoId)
+  if (archivos.length === 0) return []
+  const firmados = await Promise.all(archivos.map(async a => {
+    const { data } = await supabase.storage
+      .from(BUCKET_CURSOS)
+      .createSignedUrl(a.path, SIGNED_URL_TTL, { download: nombreDescarga(a.nombre) })
+    return data?.signedUrl ? { nombre: a.nombre, etiqueta: a.etiqueta, url: data.signedUrl } : null
+  }))
+  return firmados.filter((a): a is ArchivoLeccionAlumno => a !== null)
 }
 
 /** Ids de las lecciones de un curso accesible (ordenadas), vía RLS. */
@@ -86,10 +103,16 @@ export async function modulosConProgreso(
     .in('modulo_id', moduloIds)
     .order('orden', { ascending: true })
     .order('id', { ascending: true })
-  const conActividades = await leerLecciones(`${COLUMNAS_LECCION}, actividades, actividades_pdf_url`)
-  const leccionesRaw = faltanColumnasActividades(conActividades.error)
-    ? (await leerLecciones(COLUMNAS_LECCION)).data
-    : conActividades.data
+  // Archivos de descarga (`archivos`, scripts/migration-curso-lecciones-archivos.sql):
+  // igual, si la base aún no tiene la columna se lee como antes.
+  const conArchivos = await leerLecciones(`${COLUMNAS_LECCION}, actividades, actividades_pdf_url, archivos`)
+  let leccionesRaw = conArchivos.data
+  if (faltanColumnasActividades(conArchivos.error)) {
+    const conActividades = await leerLecciones(`${COLUMNAS_LECCION}, actividades, actividades_pdf_url`)
+    leccionesRaw = faltanColumnasActividades(conActividades.error)
+      ? (await leerLecciones(COLUMNAS_LECCION)).data
+      : conActividades.data
+  }
 
   const todas = ((leccionesRaw ?? []) as unknown as Record<string, unknown>[])
   const completadasSet = await completadasDe(supabase, alumnoId, todas.map(l => l.id as string))
@@ -112,6 +135,7 @@ export async function modulosConProgreso(
       completada: completadasSet.has(l.id as string),
       actividades: leerActividades(l.actividades),
       actividades_pdf_url: urlPdf(l.actividades_pdf_url),
+      archivos: await archivosFirmados(supabase, l.archivos, cursoId),
     }))
   )
 

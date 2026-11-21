@@ -71,3 +71,53 @@ export function portadaPath(cursoId: string, filename: string): string {
 export function materialPath(cursoId: string, leccionId: string, filename: string): string {
   return `${cursoId}/${leccionId}/${sanitizeFilename(filename)}`
 }
+
+/**
+ * Archivos de descarga de una lección (`curso_lecciones.archivos`, jsonb):
+ * `[{ path, nombre, etiqueta? }]`. `path` vive en el bucket privado 'cursos'
+ * DENTRO de `{cursoId}/archivos/…` — nunca en `{cursoId}/{leccionId}/`, que es
+ * la carpeta del material PDF y se vacía al reemplazarlo o quitarlo desde el
+ * admin. Las URLs se firman con el cliente admin, así que se aceptan solo
+ * rutas con [A-Za-z0-9._/-] (sin `%`, sin `..`): nada fuera de ese curso.
+ * Cualquier forma inesperada → [] (el aula se ve como antes).
+ */
+export interface ArchivoLeccion {
+  path: string
+  nombre: string
+  etiqueta: string | null
+}
+
+export const ARCHIVOS_LECCION_MAX = 10
+
+const RUTA_SEGURA = /^[A-Za-z0-9._/-]+$/
+
+/** Carpeta de los archivos de descarga de un curso: {cursoId}/archivos/ */
+export function archivosDir(cursoId: string): string {
+  return `${cursoId}/archivos/`
+}
+
+/**
+ * Nombre para el `?download=` de la URL firmada: storage-js lo agrega sin
+ * codificar, así que se quitan los caracteres que cortarían la URL.
+ */
+export function nombreDescarga(nombre: string): string {
+  return nombre.replace(/[&#?+%=\/]/g, '-')
+}
+
+export function leerArchivosLeccion(valor: unknown, cursoId: string): ArchivoLeccion[] {
+  if (!Array.isArray(valor) || !cursoId) return []
+  const out: ArchivoLeccion[] = []
+  for (const item of valor) {
+    if (out.length >= ARCHIVOS_LECCION_MAX) break
+    if (!item || typeof item !== 'object') continue
+    const { path, nombre, etiqueta } = item as Record<string, unknown>
+    if (typeof path !== 'string' || typeof nombre !== 'string' || !nombre.trim()) continue
+    if (!RUTA_SEGURA.test(path) || path.includes('..') || !path.startsWith(archivosDir(cursoId))) continue
+    out.push({
+      path,
+      nombre: nombre.trim().slice(0, 120),
+      etiqueta: typeof etiqueta === 'string' && etiqueta.trim() ? etiqueta.trim().slice(0, 60) : null,
+    })
+  }
+  return out
+}
