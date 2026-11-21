@@ -12,7 +12,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { firmarVideoUrl } from '@/lib/video/bunny-firma'
 import { SIGNED_URL_TTL } from './storage'
-import { BUCKET_CURSOS, leerArchivosLeccion } from './archivos'
+import { BUCKET_CURSOS, leerArchivosLeccion, nombreDescarga } from './archivos'
 import type { ArchivoLeccionAlumno, LeccionAlumno, ModuloAlumno } from '@/types/cursos-alumno'
 import { faltanColumnasActividades, leerActividades, urlPdf } from '@/components/actividades/datos'
 
@@ -33,7 +33,7 @@ async function archivosFirmados(
   const firmados = await Promise.all(archivos.map(async a => {
     const { data } = await supabase.storage
       .from(BUCKET_CURSOS)
-      .createSignedUrl(a.path, SIGNED_URL_TTL, { download: a.nombre })
+      .createSignedUrl(a.path, SIGNED_URL_TTL, { download: nombreDescarga(a.nombre) })
     return data?.signedUrl ? { nombre: a.nombre, etiqueta: a.etiqueta, url: data.signedUrl } : null
   }))
   return firmados.filter((a): a is ArchivoLeccionAlumno => a !== null)

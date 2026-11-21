@@ -341,9 +341,9 @@ export default function AulaCurso({ cursoId }: { cursoId: string }) {
                       {archivos.length > 0 && (
                         <div className="space-y-2" style={{ borderTop: '1px solid #2A2F3E', paddingTop: '1rem' }}>
                           <p className="text-xs font-medium" style={{ color: '#94A3B8' }}>Archivos de la lección</p>
-                          {archivos.map(a => (
+                          {archivos.map((a, i) => (
                             <a
-                              key={a.url}
+                              key={`${i}-${a.nombre}`}
                               href={a.url}
                               rel="noopener noreferrer"
                               className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm transition-all"
