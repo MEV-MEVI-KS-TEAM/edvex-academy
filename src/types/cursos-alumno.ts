@@ -31,6 +31,14 @@ export interface LeccionAlumno {
   actividades?: ActividadesUnidad | null
   /** PDF de las actividades de la lección (https); null = no hay. */
   actividades_pdf_url?: string | null
+  /** Archivos para descargar (práctica, solución, apoyo), ya firmados; [] = no hay. */
+  archivos?: ArchivoLeccionAlumno[]
+}
+
+export interface ArchivoLeccionAlumno {
+  nombre: string
+  etiqueta: string | null
+  url: string
 }
 
 export interface ModuloAlumno {

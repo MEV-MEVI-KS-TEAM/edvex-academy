@@ -71,3 +71,36 @@ export function portadaPath(cursoId: string, filename: string): string {
 export function materialPath(cursoId: string, leccionId: string, filename: string): string {
   return `${cursoId}/${leccionId}/${sanitizeFilename(filename)}`
 }
+
+/**
+ * Archivos de descarga de una lección (`curso_lecciones.archivos`, jsonb):
+ * `[{ path, nombre, etiqueta? }]`. `path` vive en el bucket privado 'cursos' y
+ * DEBE estar dentro de la carpeta del curso (`{cursoId}/…`): las URLs se firman
+ * con el cliente admin, así que una ruta de otro curso se descarta aquí.
+ * Cualquier forma inesperada → [] (el aula se ve como antes).
+ */
+export interface ArchivoLeccion {
+  path: string
+  nombre: string
+  etiqueta: string | null
+}
+
+export const ARCHIVOS_LECCION_MAX = 10
+
+export function leerArchivosLeccion(valor: unknown, cursoId: string): ArchivoLeccion[] {
+  if (!Array.isArray(valor) || !cursoId) return []
+  const out: ArchivoLeccion[] = []
+  for (const item of valor) {
+    if (out.length >= ARCHIVOS_LECCION_MAX) break
+    if (!item || typeof item !== 'object') continue
+    const { path, nombre, etiqueta } = item as Record<string, unknown>
+    if (typeof path !== 'string' || typeof nombre !== 'string' || !nombre.trim()) continue
+    if (!path.startsWith(`${cursoId}/`) || path.includes('..') || path.includes('\\')) continue
+    out.push({
+      path,
+      nombre: nombre.trim().slice(0, 120),
+      etiqueta: typeof etiqueta === 'string' && etiqueta.trim() ? etiqueta.trim().slice(0, 60) : null,
+    })
+  }
+  return out
+}
